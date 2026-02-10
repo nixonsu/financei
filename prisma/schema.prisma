@@ -8,5 +8,113 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
+}
+
+// Enums
+enum TransactionType {
+  INCOME
+  EXPENSE
+}
+
+enum TransactionCategory {
+  CONVERT
+  SALE
+  INTEREST
+  BUSINESS
+  PERSONAL
+}
+
+// Models
+model User {
+  id        Int    @id @default(autoincrement())
+  firstName String
+  lastName  String
+  email     String @unique
+
+  businesses Business[]
+  @@map("user")
+}
+
+model Business {
+  id     Int    @id @default(autoincrement())
+  userId Int
+  name   String
+
+  user  User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  clients              Client[]
+  transactions         Transaction[]
+  cardBalanceSnapshots CardBalanceSnapshot[]
+  cashBalanceSnapshots CashBalanceSnapshot[]
+
+  @@index([userId])
+  @@map("business")
+}
+
+model Client {
+  id          Int     @id @default(autoincrement())
+  businessId  Int
+  firstName   String
+  lastName    String
+  phoneNumber String?
+  email       String?
+
+  business     Business      @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  transactions Transaction[]
+
+  @@index([businessId])
+  @@map("client")
+}
+
+model Transaction {
+  id         Int                 @id @default(autoincrement())
+  businessId Int
+  type       TransactionType
+  category   TransactionCategory
+  clientId   Int?
+
+  cardAmount Decimal             @default(0) @db.Decimal(12, 2)
+  cashAmount Decimal             @default(0) @db.Decimal(12, 2)
+  notes      String?
+
+  createdAt  DateTime            @default(now())
+  updatedAt  DateTime            @updatedAt
+
+  business   Business            @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  client     Client?             @relation(fields: [clientId], references: [id], onDelete: SetNull)
+
+  @@index([businessId])
+  @@index([clientId])
+  @@index([createdAt])
+  @@map("transaction")
+}
+
+model CardBalanceSnapshot {
+  id         Int      @id @default(autoincrement())
+  businessId Int
+  total      Decimal  @db.Decimal(12, 2)
+  recordedAt DateTime @default(now())
+
+  business   Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@index([businessId])
+  @@index([recordedAt])
+  @@map("card_balance_snapshot")
+}
+
+model CashBalanceSnapshot {
+  id         Int      @id @default(autoincrement())
+  businessId Int
+  fives      Int      @default(0)
+  tens       Int      @default(0)
+  twenties   Int      @default(0)
+  fifties    Int      @default(0)
+  hundreds   Int      @default(0)
+  recordedAt DateTime @default(now())
+
+  business   Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@index([businessId])
+  @@index([recordedAt])
+  @@map("cash_balance_snapshot")
 }
