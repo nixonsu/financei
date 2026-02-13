@@ -77,7 +77,7 @@ model Transaction {
   cashAmount Decimal             @default(0) @db.Decimal(12, 2)
   notes      String?
 
-  createdAt  DateTime            @default(now())
+  occurredAt  DateTime            @default(now())
   updatedAt  DateTime            @updatedAt
 
   business   Business            @relation(fields: [businessId], references: [id], onDelete: Cascade)
@@ -85,7 +85,7 @@ model Transaction {
 
   @@index([businessId])
   @@index([clientId])
-  @@index([createdAt])
+  @@index([occurredAt])
   @@map("transaction")
 }
 
