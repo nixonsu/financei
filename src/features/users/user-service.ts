@@ -1,6 +1,5 @@
-import { PrismaClient } from "@/generated/prisma/client";
+import { PrismaClient, User } from "@/generated/prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
-import { User } from "./user-model";
 
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
 const prisma = new PrismaClient({ adapter });

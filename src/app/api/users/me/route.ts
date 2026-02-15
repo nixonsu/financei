@@ -1,12 +1,6 @@
 import { getUser } from "@/src/features/users/user-service";
 
-export async function GET(request: Request): Promise<Response> {
-  // const authHeader = request.headers.get("authorization");
-
-  // if (!authHeader || !authHeader.startsWith("Bearer ")) {
-  //   return Response.json({ error: "Unauthorized" }, { status: 401 });
-  // }
-
+export async function GET(): Promise<Response> {
   const user = await getUser("meep@hotmail.com");
 
   return new Response(JSON.stringify(user), {
