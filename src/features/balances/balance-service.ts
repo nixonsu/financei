@@ -9,6 +9,37 @@ import { PrismaPg } from "@prisma/adapter-pg";
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
 const prisma = new PrismaClient({ adapter });
 
+export async function updateCardBalance(businessId: number, total: number) {
+  await prisma.cardBalanceSnapshot.create({
+    data: {
+      id: undefined,
+      businessId: businessId,
+      total: total,
+    },
+  });
+}
+
+export async function updateCashBalance(
+  businessId: number,
+  fives: number,
+  tens: number,
+  twenties: number,
+  fifties: number,
+  hundreds: number,
+) {
+  await prisma.cashBalanceSnapshot.create({
+    data: {
+      id: undefined,
+      businessId: businessId,
+      fives: fives,
+      tens: tens,
+      twenties: twenties,
+      fifties: fifties,
+      hundreds: hundreds,
+    },
+  });
+}
+
 export async function getBalances(businessId: number): Promise<Balances> {
   const cardSnapshot: CardBalanceSnapshot =
     await prisma.cardBalanceSnapshot.findFirstOrThrow({
