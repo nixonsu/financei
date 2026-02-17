@@ -40,8 +40,8 @@ export default function Navigation() {
       {
         id: 2,
         type: "link",
-        href: "/clients",
-        icon: <UserIcon weight="fill" size={ICON_SIZE} />,
+        href: "/transactions",
+        icon: <ListIcon weight="fill" size={ICON_SIZE} />,
       },
       {
         id: 3,
@@ -51,8 +51,8 @@ export default function Navigation() {
       {
         id: 4,
         type: "link",
-        href: "/transactions",
-        icon: <ListIcon weight="fill" size={ICON_SIZE} />,
+        href: "/clients",
+        icon: <UserIcon weight="fill" size={ICON_SIZE} />,
       },
       {
         id: 5,
