@@ -1,7 +1,8 @@
 import classNames from "classnames";
-import { useState } from "react";
 
 type InputType = {
+  value: string;
+  onChange?: (value: string) => void;
   type?: "text" | "number" | "password";
   placeholder?: string;
   focusColor?:
@@ -17,13 +18,14 @@ type InputType = {
 };
 
 const Input = ({
+  value,
+  onChange,
   type = "text",
   placeholder,
   focusColor = "pink",
   rounded = "none",
   className,
 }: InputType) => {
-  const [value, setValue] = useState("");
   return (
     <input
       className={classNames(
@@ -44,7 +46,7 @@ const Input = ({
       placeholder={placeholder}
       value={value}
       onChange={(e) => {
-        setValue(e.target.value);
+        onChange?.(e.target.value);
       }}
     />
   );

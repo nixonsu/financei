@@ -1,5 +1,6 @@
 "use client";
 
+import Input from "@/src/components/Input";
 import { API_ROUTES } from "@/src/constants/api-routes";
 import { Balances } from "@/src/features/balances/balances";
 import Link from "next/link";
@@ -7,6 +8,7 @@ import { useEffect, useState } from "react";
 
 export default function CardBalancePage() {
   const [balances, setBalances] = useState<Balances | null>(null);
+  const [cardBalanceInput, setCardBalanceInput] = useState<number | null>(null);
 
   useEffect(() => {
     async function fetchBalances() {
@@ -20,16 +22,12 @@ export default function CardBalancePage() {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const formData = new FormData(e.currentTarget);
-    const total = formData.get("total");
 
-    if (typeof total === "string") {
-      await fetch(API_ROUTES.BALANCES_CARD, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ total: parseFloat(total) }),
-      });
-    }
+    await fetch(API_ROUTES.BALANCES_CARD, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ total: cardBalanceInput }),
+    });
 
     const res = await fetch(API_ROUTES.BALANCES);
     const updatedBalances = await res.json();
@@ -48,11 +46,13 @@ export default function CardBalancePage() {
               Current Card Balance: ${balances.cardBalance.total}
             </p>
             <form onSubmit={handleSubmit} className="mt-4">
-              <input
+              <Input
+                value={cardBalanceInput?.toString() || ""}
                 type="number"
-                name="total"
-                placeholder="New Card Balance"
-                className="mt-2 rounded border px-4 py-2"
+                placeholder="Ooo update me"
+                onChange={(value) =>
+                  setCardBalanceInput(parseFloat(value) || 0)
+                }
               />
               <button
                 type="submit"
