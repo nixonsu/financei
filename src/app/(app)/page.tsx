@@ -1,7 +1,7 @@
 "use client";
 
 import { User } from "@/generated/prisma/client";
-import { API_ROUTES } from "@/src/constants/api-routes";
+import { API_ROUTES } from "@/src/constants/routes";
 import { Balances } from "@/src/features/balances/balances";
 import Link from "next/link";
 import { useEffect, useState } from "react";
