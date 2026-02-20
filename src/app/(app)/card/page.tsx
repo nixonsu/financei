@@ -43,7 +43,7 @@ export default function CardBalancePage() {
   return (
     <div>
       <div className="w-full">
-        <div className="absolute top-4 left-4">
+        <div className="absolute top-4 left-4 cursor-pointer">
           <ArrowFatLeftIcon
             onClick={() => router.push(UI_ROUTES.HOME)}
             weight="fill"

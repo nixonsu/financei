@@ -5,7 +5,6 @@ import Card from "@/src/components/Card";
 import { API_ROUTES } from "@/src/constants/routes";
 import { Balances } from "@/src/features/balances/balances";
 import { CaretRightIcon } from "@phosphor-icons/react/dist/icons/CaretRight";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
@@ -35,6 +34,10 @@ export default function Home() {
     router.push("/card");
   };
 
+  const handleCashBalanceClick = () => {
+    router.push("/cash");
+  };
+
   return (
     <div>
       <div>
@@ -50,9 +53,13 @@ export default function Home() {
 
               <CaretRightIcon className="w-4 h-4" weight="fill" size={32} />
             </Card>
-            <Card>
+            <Card
+              className="flex items-center justify-between gap-4 cursor-pointer"
+              onClick={handleCashBalanceClick}
+            >
               <p>Cash Balance: ${balances.cashBalance.total}</p>
-              <Link href="/cash">Update Cash Balance</Link>
+
+              <CaretRightIcon className="w-4 h-4" weight="fill" size={32} />
             </Card>
             <Card>
               <p>Variance: ${balances.variance}</p>

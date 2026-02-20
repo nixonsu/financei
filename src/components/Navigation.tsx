@@ -97,7 +97,7 @@ export default function Navigation() {
               <button
                 type="button"
                 onClick={() => go("/add-income")}
-                className={`absolute -left-32 -top-20 flex items-center justify-center p-1 border-3 bg-green-300 shadow transition duration-200 ${
+                className={`cursor-pointer absolute -left-32 -top-20 flex items-center justify-center p-1 border-3 bg-green-300 shadow transition duration-200 ${
                   fanoutOpen
                     ? "pointer-events-auto scale-100 opacity-100"
                     : "pointer-events-none scale-90 opacity-0"
@@ -111,7 +111,7 @@ export default function Navigation() {
               <button
                 type="button"
                 onClick={() => go("/add-expense")}
-                className={`absolute left-1/2 -top-20 -translate-x-1/2 flex items-center justify-center p-1 border-3 bg-red-300 shadow transition duration-200 ${
+                className={`cursor-pointer absolute left-1/2 -top-20 -translate-x-1/2 flex items-center justify-center p-1 border-3 bg-red-300 shadow transition duration-200 ${
                   fanoutOpen
                     ? "pointer-events-auto scale-100 opacity-100"
                     : "pointer-events-none scale-90 opacity-0"
@@ -125,7 +125,7 @@ export default function Navigation() {
               <button
                 type="button"
                 onClick={() => go("/add-convert")}
-                className={`absolute -right-32 -top-20 flex items-center justify-center p-1 border-3 bg-blue-300 shadow transition duration-200 ${
+                className={`cursor-pointer absolute -right-32 -top-20 flex items-center justify-center p-1 border-3 bg-blue-300 shadow transition duration-200 ${
                   fanoutOpen
                     ? "pointer-events-auto scale-100 opacity-100"
                     : "pointer-events-none scale-90 opacity-0"
@@ -150,7 +150,7 @@ export default function Navigation() {
                 onClick={toggleFanout}
                 aria-expanded={fanoutOpen}
                 aria-label="Open add menu"
-                className={`relative z-50 flex h-16 flex-col items-center justify-center transition ${
+                className={`cursor-pointer relative z-50 flex h-16 flex-col items-center justify-center transition ${
                   fanoutOpen ? "opacity-100" : "opacity-80"
                 }`}
               >

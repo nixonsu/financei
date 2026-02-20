@@ -27,6 +27,7 @@ const Button = ({
       onClick={onClick}
       className={classNames(
         "border-black border-2",
+        "cursor-pointer",
 
         {
           "bg-violet-200 hover:bg-violet-300 active:bg-violet-400":
