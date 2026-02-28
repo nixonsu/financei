@@ -5,6 +5,7 @@ type InputType = {
   value: string;
   onChange?: (value: string) => void;
   type?: "text" | "number" | "password";
+  inputMode?: "text" | "numeric" | "decimal";
   placeholder?: string;
   focusColor?:
     | "violet"
@@ -24,6 +25,7 @@ const Input = ({
   value,
   onChange,
   type = "text",
+  inputMode,
   placeholder,
   focusColor = "pink",
   rounded = "none",
@@ -48,6 +50,7 @@ const Input = ({
         className,
       )}
       type={type}
+      inputMode={inputMode}
       placeholder={placeholder}
       value={value}
       onChange={(e) => {
