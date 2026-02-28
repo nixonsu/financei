@@ -16,6 +16,7 @@ type InputType = {
     | "cyan";
   rounded?: "none" | "md" | "full";
   className?: string;
+  disabled?: boolean;
 };
 
 const Input = ({
@@ -27,6 +28,7 @@ const Input = ({
   focusColor = "pink",
   rounded = "none",
   className,
+  disabled = false,
 }: InputType) => {
   return (
     <input
@@ -51,6 +53,7 @@ const Input = ({
       onChange={(e) => {
         onChange?.(e.target.value);
       }}
+      disabled={disabled}
     />
   );
 };
