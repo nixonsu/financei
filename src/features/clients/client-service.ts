@@ -18,11 +18,13 @@ interface CsvClient {
   notes: string | null;
 }
 
-export async function syncClients(businessId: number): Promise<{
+export interface SyncResult {
   created: number;
   updated: number;
   total: number;
-}> {
+}
+
+export async function syncClients(businessId: number): Promise<SyncResult> {
   const file = fs.readFileSync("src/features/clients/list (7).csv", "utf-8");
 
   const result: Papa.ParseResult<CsvClient> = Papa.parse(file, {
