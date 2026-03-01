@@ -31,7 +31,7 @@ export default function ClientsPage() {
       const result: SyncResult = await res.json();
       refresh();
       showToast(
-        `Synced ${result.total} clients — ${result.created} created, ${result.updated} updated`,
+        `Synced ${result.total} clients - ${result.created} created, ${result.updated} updated`,
       );
     } catch {
       showToast("Failed to sync clients", "error");
