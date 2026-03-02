@@ -3,6 +3,7 @@
 import Button from "@/src/components/Button";
 import Card from "@/src/components/Card";
 import CurrencyInput from "@/src/components/CurrencyInput";
+import { showToast } from "@/src/components/Toast";
 import { API_ROUTES, UI_ROUTES } from "@/src/constants/routes";
 import { Balances } from "@/src/features/balances/balances";
 import { ArrowFatLeftIcon } from "@phosphor-icons/react";
@@ -27,15 +28,22 @@ export default function CardBalancePage() {
 
   const handleSubmit = async () => {
     const total = parseFloat(cardBalanceInput) || 0;
-    await fetch(API_ROUTES.BALANCES_CARD, {
+    const res = await fetch(API_ROUTES.BALANCES_CARD, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ total }),
     });
+    const data = await res.json();
 
-    const res = await fetch(API_ROUTES.BALANCES);
-    const updatedBalances = await res.json();
+    if (!res.ok) {
+      showToast(data.error || "Failed to update card balance", "error");
+      return;
+    }
+
+    const balancesRes = await fetch(API_ROUTES.BALANCES);
+    const updatedBalances = await balancesRes.json();
     setBalances(updatedBalances);
+    showToast("Card balance updated");
     router.push(UI_ROUTES.HOME);
   };
 

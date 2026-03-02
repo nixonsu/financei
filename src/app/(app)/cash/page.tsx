@@ -3,6 +3,7 @@
 import Button from "@/src/components/Button";
 import Card from "@/src/components/Card";
 import Input from "@/src/components/Input";
+import { showToast } from "@/src/components/Toast";
 import { API_ROUTES, UI_ROUTES } from "@/src/constants/routes";
 import { Balances } from "@/src/features/balances/balances";
 import { calculateCashTotal, CashBalances } from "@/src/utils/calculations";
@@ -41,15 +42,22 @@ export default function CardBalancePage() {
   const handleSubmit = async () => {
     const { fives, tens, twenties, fifties, hundreds } = cashBalanceInput || {};
 
-    await fetch(API_ROUTES.BALANCES_CASH, {
+    const res = await fetch(API_ROUTES.BALANCES_CASH, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ fives, tens, twenties, fifties, hundreds }),
     });
+    const data = await res.json();
 
-    const res = await fetch(API_ROUTES.BALANCES);
-    const updatedBalances = await res.json();
+    if (!res.ok) {
+      showToast(data.error || "Failed to update cash balance", "error");
+      return;
+    }
+
+    const balancesRes = await fetch(API_ROUTES.BALANCES);
+    const updatedBalances = await balancesRes.json();
     setBalances(updatedBalances);
+    showToast("Cash balance updated");
     router.push(UI_ROUTES.HOME);
   };
 

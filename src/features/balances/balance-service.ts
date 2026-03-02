@@ -10,13 +10,22 @@ const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
 const prisma = new PrismaClient({ adapter });
 
 export async function updateCardBalance(businessId: number, total: number) {
-  await prisma.cardBalanceSnapshot.create({
-    data: {
-      id: undefined,
-      businessId: businessId,
-      total: total,
-    },
-  });
+  if (isNaN(total)) {
+    throw new Error("Invalid card balance amount");
+  }
+
+  try {
+    await prisma.cardBalanceSnapshot.create({
+      data: {
+        id: undefined,
+        businessId: businessId,
+        total: total,
+      },
+    });
+  } catch (error) {
+    console.error("Failed to update card balance:", error);
+    throw new Error("Failed to save card balance");
+  }
 }
 
 export async function updateCashBalance(
@@ -27,17 +36,29 @@ export async function updateCashBalance(
   fifties: number,
   hundreds: number,
 ) {
-  await prisma.cashBalanceSnapshot.create({
-    data: {
-      id: undefined,
-      businessId: businessId,
-      fives: fives,
-      tens: tens,
-      twenties: twenties,
-      fifties: fifties,
-      hundreds: hundreds,
-    },
-  });
+  const values = { fives, tens, twenties, fifties, hundreds };
+  for (const [key, value] of Object.entries(values)) {
+    if (isNaN(value) || value < 0) {
+      throw new Error(`Invalid value for ${key}`);
+    }
+  }
+
+  try {
+    await prisma.cashBalanceSnapshot.create({
+      data: {
+        id: undefined,
+        businessId: businessId,
+        fives: fives,
+        tens: tens,
+        twenties: twenties,
+        fifties: fifties,
+        hundreds: hundreds,
+      },
+    });
+  } catch (error) {
+    console.error("Failed to update cash balance:", error);
+    throw new Error("Failed to save cash balance");
+  }
 }
 
 export async function getBalances(businessId: number): Promise<Balances> {
