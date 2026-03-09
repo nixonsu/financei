@@ -1,16 +1,14 @@
 import { PrismaClient } from "@/generated/prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
-import "dotenv/config";
 import fs from "fs";
 import Papa from "papaparse";
-import { exit } from "process";
 
-const file = fs.readFileSync("src/features/clients/list (7).csv", "utf-8");
+import { downloadClientList } from "./download-clients";
 
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
 const prisma = new PrismaClient({ adapter });
 
-interface Client {
+interface CsvClient {
   firstName: string;
   lastName: string;
   email: string;
@@ -18,10 +16,19 @@ interface Client {
   notes: string | null;
 }
 
-async function main() {
-  console.log("Starting to sync clients...");
+export interface SyncResult {
+  created: number;
+  updated: number;
+  total: number;
+}
+
+export async function syncClients(businessId: number): Promise<SyncResult> {
+  console.log("Downloading client list from Acuity...");
+  const csvPath = await downloadClientList();
+  const file = fs.readFileSync(csvPath, "utf-8");
+
   console.log("Parsing CSV file...");
-  const result: Papa.ParseResult<Client> = Papa.parse(file, {
+  const result: Papa.ParseResult<CsvClient> = Papa.parse(file, {
     header: true,
     skipEmptyLines: true,
     transformHeader: (h) =>
@@ -41,9 +48,11 @@ async function main() {
   });
   console.log(`Parsed CSV file with ${result.data.length} clients`);
 
+  let created = 0;
+  let updated = 0;
+
   console.log("Syncing clients with database...");
   for (const client of result.data) {
-    // First name + last name are used as unique identifiers
     const existingClient = await prisma.client.findFirst({
       where: {
         firstName: client.firstName,
@@ -78,6 +87,7 @@ async function main() {
         console.log(
           `UPDATE: Email for ${client.firstName} ${client.lastName}: ${existingClient.email} -> ${client.email}`,
         );
+        updated++;
       }
 
       if (phoneChanged) {
@@ -93,11 +103,12 @@ async function main() {
         console.log(
           `UPDATE: Phone number for ${client.firstName} ${client.lastName}: ${existingClient.phoneNumber} -> ${client.phone}`,
         );
+        updated++;
       }
     } else {
       await prisma.client.create({
         data: {
-          businessId: 1,
+          businessId,
           firstName: client.firstName,
           lastName: client.lastName,
           email: client.email,
@@ -105,11 +116,14 @@ async function main() {
         },
       });
       console.log(`CREATE: ${client.firstName} ${client.lastName}`);
+      created++;
     }
   }
 
   console.log("Finished syncing clients");
-  exit(0);
-}
 
-main();
+  fs.unlinkSync(csvPath);
+  console.log("Cleaned up downloaded CSV");
+
+  return { created, updated, total: result.data.length };
+}
