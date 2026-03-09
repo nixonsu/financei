@@ -5,6 +5,7 @@ export const API_ROUTES = {
   BALANCES_CASH: "/api/balances/cash",
   CLIENTS: "/api/clients",
   CLIENTS_SYNC: "/api/clients/sync",
+  SALE: "/api/sale",
 } as const;
 
 export const UI_ROUTES = {

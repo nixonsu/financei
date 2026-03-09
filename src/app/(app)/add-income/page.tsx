@@ -5,6 +5,7 @@ import Button from "@/src/components/Button";
 import CurrencyInput from "@/src/components/CurrencyInput";
 import Input from "@/src/components/Input";
 import Select from "@/src/components/Select";
+import { showToast } from "@/src/components/Toast";
 import { API_ROUTES, UI_ROUTES } from "@/src/constants/routes";
 import {
   CaretRightIcon,
@@ -61,6 +62,25 @@ export default function AddIncomePage() {
   }, [clients, clientSearch]);
 
   const handleSubmit = async () => {
+    const res = await fetch(API_ROUTES.SALE, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        cardAmount: parseFloat(cardAmount),
+        cashAmount: parseFloat(cashAmount),
+        date,
+        notes,
+        clientId: selectedClient?.id,
+      }),
+    });
+    const data = await res.json();
+
+    if (!res.ok) {
+      showToast(data.error || "Failed to add income", "error");
+      return;
+    }
+
+    showToast(data.message);
     router.push(UI_ROUTES.HOME);
   };
 
