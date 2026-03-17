@@ -141,6 +141,22 @@ export async function createCashToCardConversion(
   return [income, expense];
 }
 
+export async function updateTransaction(
+  id: number,
+  data: { date: string | Date; notes: string; cardAmount: number; cashAmount: number },
+): Promise<Transaction> {
+  return prisma.transaction.update({
+    where: { id },
+    data: {
+      occurredAt: new Date(data.date),
+      notes: data.notes,
+      cardAmount: data.cardAmount,
+      cashAmount: data.cashAmount,
+      updatedAt: new Date(),
+    },
+  });
+}
+
 export async function getTransactions(
   businessId: number,
   from: Date,

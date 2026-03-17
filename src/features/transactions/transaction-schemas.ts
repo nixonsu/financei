@@ -29,6 +29,16 @@ export const conversionSchema = z.object({
   notes,
 });
 
+export const updateTransactionSchema = z
+  .object({
+    id: z.number({ error: "Transaction ID is required" }),
+    cardAmount,
+    cashAmount,
+    date,
+    notes,
+  })
+  .refine(hasAmount, { message: HAS_AMOUNT_MESSAGE });
+
 export const saleTransactionSchema = z
   .object({
     cardAmount,

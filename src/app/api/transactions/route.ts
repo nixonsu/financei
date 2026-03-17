@@ -1,4 +1,6 @@
-import { getTransactions } from "@/src/features/transactions/transaction-service";
+import { updateTransactionSchema } from "@/src/features/transactions/transaction-schemas";
+import { getTransactions, updateTransaction } from "@/src/features/transactions/transaction-service";
+import { parseRequestBody } from "@/src/utils/validation";
 
 export async function GET(request: Request): Promise<Response> {
   const { searchParams } = new URL(request.url);
@@ -32,6 +34,29 @@ export async function GET(request: Request): Promise<Response> {
     const message =
       error instanceof Error ? error.message : "Failed to fetch transactions";
     console.error("Failed to fetch transactions:", error);
+    return new Response(JSON.stringify({ error: message }), {
+      status: 500,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+}
+
+export async function PATCH(request: Request): Promise<Response> {
+  try {
+    const parsed = await parseRequestBody(request, updateTransactionSchema);
+    if (!parsed.success) return parsed.response;
+    const { id, cardAmount, cashAmount, date, notes } = parsed.data;
+
+    const updated = await updateTransaction(id, { date, notes, cardAmount, cashAmount });
+
+    return new Response(
+      JSON.stringify({ message: "Transaction updated", transaction: updated }),
+      { status: 200, headers: { "Content-Type": "application/json" } },
+    );
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : "Failed to update transaction";
+    console.error("Failed to update transaction:", error);
     return new Response(JSON.stringify({ error: message }), {
       status: 500,
       headers: { "Content-Type": "application/json" },

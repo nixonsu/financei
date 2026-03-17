@@ -1,11 +1,16 @@
 "use client";
 
+import Button from "@/src/components/Button";
+import CurrencyInput from "@/src/components/CurrencyInput";
+import Input from "@/src/components/Input";
+import { showToast } from "@/src/components/Toast";
 import { API_ROUTES } from "@/src/constants/routes";
 import type { Icon } from "@phosphor-icons/react";
 import {
   ArrowsLeftRightIcon,
   BankIcon,
   BriefcaseIcon,
+  PencilSimpleIcon,
   StorefrontIcon,
   UserIcon,
   XIcon,
@@ -100,6 +105,58 @@ export default function TransactionsPage() {
   const [transactions, setTransactions] = useState<TransactionDTO[]>([]);
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<TransactionDTO | null>(null);
+  const [editing, setEditing] = useState(false);
+  const [editDate, setEditDate] = useState("");
+  const [editCardAmount, setEditCardAmount] = useState("");
+  const [editCashAmount, setEditCashAmount] = useState("");
+  const [editNotes, setEditNotes] = useState("");
+
+  const openSelected = (tx: TransactionDTO) => {
+    setSelected(tx);
+    setEditing(false);
+  };
+
+  const closeSelected = () => {
+    setSelected(null);
+    setEditing(false);
+  };
+
+  const startEditing = () => {
+    if (!selected) return;
+    setEditDate(selected.occurredAt.slice(0, 10));
+    setEditCardAmount(parseFloat(selected.cardAmount).toString());
+    setEditCashAmount(parseFloat(selected.cashAmount).toString());
+    setEditNotes(selected.notes ?? "");
+    setEditing(true);
+  };
+
+  const handleSave = async () => {
+    if (!selected) return;
+    const body = {
+      id: selected.id,
+      cardAmount: parseFloat(editCardAmount) || 0,
+      cashAmount: parseFloat(editCashAmount) || 0,
+      date: editDate,
+      notes: editNotes,
+    };
+
+    const res = await fetch(API_ROUTES.TRANSACTIONS, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    const data = await res.json();
+
+    if (!res.ok) {
+      showToast(data.error || "Failed to update transaction", "error");
+      return;
+    }
+
+    showToast("Transaction updated");
+    setSelected(null);
+    setEditing(false);
+    fetchTransactions();
+  };
 
   const fetchTransactions = useCallback(async () => {
     setLoading(true);
@@ -170,7 +227,7 @@ export default function TransactionsPage() {
                     <button
                       key={tx.id}
                       type="button"
-                      onClick={() => setSelected(tx)}
+                      onClick={() => openSelected(tx)}
                       className={`w-full flex items-center gap-3 px-4 py-3 text-left cursor-pointer hover:bg-gray-50 active:bg-gray-100 ${
                         i < txs.length - 1 ? "border-b-2 border-black" : ""
                       }`}
@@ -216,23 +273,34 @@ export default function TransactionsPage() {
       {selected && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
-          onClick={() => setSelected(null)}
+          onClick={closeSelected}
         >
           <div
             className="mx-4 w-full max-w-sm bg-white border-3 border-black shadow-[8px_8px_0px_rgba(0,0,0,1)] p-6"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-start justify-between mb-4">
+            <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-bold italic">
                 {CATEGORY_LABELS[selected.category]}
               </h2>
-              <button
-                type="button"
-                onClick={() => setSelected(null)}
-                className="cursor-pointer p-1 hover:bg-gray-100 border-2 border-black"
-              >
-                <XIcon size={20} weight="bold" />
-              </button>
+              <div className="flex items-center gap-2">
+                {!editing && (
+                  <button
+                    type="button"
+                    onClick={startEditing}
+                    className="cursor-pointer p-1 hover:bg-cyan-100 border-2 border-black"
+                  >
+                    <PencilSimpleIcon size={20} weight="bold" />
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={closeSelected}
+                  className="cursor-pointer p-1 hover:bg-gray-100 border-2 border-black"
+                >
+                  <XIcon size={20} weight="bold" />
+                </button>
+              </div>
             </div>
 
             <div className="flex flex-col gap-3">
@@ -257,44 +325,113 @@ export default function TransactionsPage() {
                 </div>
               )}
 
-              <DetailRow
-                label="Date"
-                value={formatDateHeading(selected.occurredAt.slice(0, 10))}
-              />
-              {(() => {
-                const isExpense = selected.type === "EXPENSE";
-                const card = parseFloat(selected.cardAmount);
-                const cash = parseFloat(selected.cashAmount);
-                const total = card + cash;
-                const signFor = (n: number) => isExpense && n > 0 ? "-" : "";
-                return (
-                  <>
-                    <DetailRow
-                      label="Card amount"
-                      value={`${signFor(card)}${formatCurrency(card)}`}
+              {editing ? (
+                <>
+                  <div className="flex items-center gap-3">
+                    <label className="text-sm text-gray-500 w-14">Date</label>
+                    <input
+                      type="date"
+                      value={editDate}
+                      onChange={(e) => setEditDate(e.target.value)}
+                      className="flex-1 border-black border-2 p-2.5 focus:outline-none focus:shadow-[2px_2px_0px_rgba(0,0,0,1)]"
                     />
-                    <DetailRow
-                      label="Cash amount"
-                      value={`${signFor(cash)}${formatCurrency(cash)}`}
-                    />
+                  </div>
 
-                    <div className="border-t-2 border-black pt-3 mt-1">
-                      <DetailRow
-                        label="Total"
-                        value={`${signFor(total)}${formatCurrency(total)}`}
-                        bold
-                        color={isExpense ? "text-red-600" : "text-green-600"}
-                      />
+                  <div className="flex items-center gap-3">
+                    <label className="text-sm text-gray-500 w-14">Card</label>
+                    <CurrencyInput
+                      value={editCardAmount}
+                      onChange={setEditCardAmount}
+                      className="flex-1! w-full!"
+                    />
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <label className="text-sm text-gray-500 w-14">Cash</label>
+                    <CurrencyInput
+                      value={editCashAmount}
+                      onChange={setEditCashAmount}
+                      className="flex-1! w-full!"
+                    />
+                  </div>
+
+                  <div className="flex items-center gap-3">
+                    <label className="text-sm text-gray-500 w-14">Notes</label>
+                    <Input
+                      value={editNotes}
+                      onChange={setEditNotes}
+                      placeholder="Optional notes..."
+                      className="flex-1! w-full!"
+                    />
+                  </div>
+
+                  <div className="flex gap-3 mt-2">
+                    <Button
+                      onClick={() => setEditing(false)}
+                      color="red"
+                      size="md"
+                      rounded="md"
+                      className="flex-1 font-semibold"
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      onClick={handleSave}
+                      color="lime"
+                      size="md"
+                      rounded="md"
+                      className="flex-1 font-semibold"
+                    >
+                      Save
+                    </Button>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <DetailRow
+                    label="Date"
+                    value={formatDateHeading(selected.occurredAt.slice(0, 10))}
+                  />
+                  {(() => {
+                    const isExpense = selected.type === "EXPENSE";
+                    const card = parseFloat(selected.cardAmount);
+                    const cash = parseFloat(selected.cashAmount);
+                    const total = card + cash;
+                    const signFor = (n: number) =>
+                      isExpense && n > 0 ? "-" : "";
+                    return (
+                      <>
+                        <DetailRow
+                          label="Card amount"
+                          value={`${signFor(card)}${formatCurrency(card)}`}
+                        />
+                        <DetailRow
+                          label="Cash amount"
+                          value={`${signFor(cash)}${formatCurrency(cash)}`}
+                        />
+
+                        <div className="border-t-2 border-black pt-3 mt-1">
+                          <DetailRow
+                            label="Total"
+                            value={`${signFor(total)}${formatCurrency(total)}`}
+                            bold
+                            color={
+                              isExpense ? "text-red-600" : "text-green-600"
+                            }
+                          />
+                        </div>
+                      </>
+                    );
+                  })()}
+
+                  {selected.notes && (
+                    <div className="border-t-2 border-dashed border-gray-300 pt-3 mt-1">
+                      <p className="text-sm font-semibold text-gray-500">
+                        Notes
+                      </p>
+                      <p className="text-base">{selected.notes}</p>
                     </div>
-                  </>
-                );
-              })()}
-
-              {selected.notes && (
-                <div className="border-t-2 border-dashed border-gray-300 pt-3 mt-1">
-                  <p className="text-sm font-semibold text-gray-500">Notes</p>
-                  <p className="text-base">{selected.notes}</p>
-                </div>
+                  )}
+                </>
               )}
             </div>
           </div>
