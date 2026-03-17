@@ -172,12 +172,12 @@ export default function TransactionsPage() {
                       type="button"
                       onClick={() => setSelected(tx)}
                       className={`w-full flex items-center gap-3 px-4 py-3 text-left cursor-pointer hover:bg-gray-50 active:bg-gray-100 ${
-                        i < txs.length - 1
-                          ? "border-b-2 border-black"
-                          : ""
+                        i < txs.length - 1 ? "border-b-2 border-black" : ""
                       }`}
                     >
-                      <div className={`shrink-0 w-10 h-10 border-2 border-black flex items-center justify-center ${CATEGORY_ICON_BG[tx.category]}`}>
+                      <div
+                        className={`shrink-0 w-10 h-10 border-2 border-black flex items-center justify-center ${CATEGORY_ICON_BG[tx.category]}`}
+                      >
                         {(() => {
                           const Icon = CATEGORY_ICONS[tx.category];
                           return <Icon size={22} weight="bold" />;
@@ -261,27 +261,34 @@ export default function TransactionsPage() {
                 label="Date"
                 value={formatDateHeading(selected.occurredAt.slice(0, 10))}
               />
-              <DetailRow
-                label="Card amount"
-                value={formatCurrency(parseFloat(selected.cardAmount))}
-              />
-              <DetailRow
-                label="Cash amount"
-                value={formatCurrency(parseFloat(selected.cashAmount))}
-              />
+              {(() => {
+                const isExpense = selected.type === "EXPENSE";
+                const card = parseFloat(selected.cardAmount);
+                const cash = parseFloat(selected.cashAmount);
+                const total = card + cash;
+                const signFor = (n: number) => isExpense && n > 0 ? "-" : "";
+                return (
+                  <>
+                    <DetailRow
+                      label="Card amount"
+                      value={`${signFor(card)}${formatCurrency(card)}`}
+                    />
+                    <DetailRow
+                      label="Cash amount"
+                      value={`${signFor(cash)}${formatCurrency(cash)}`}
+                    />
 
-              <div className="border-t-2 border-black pt-3 mt-1">
-                <DetailRow
-                  label="Total"
-                  value={`${selected.type === "EXPENSE" ? "-" : ""}${formatCurrency(totalAmount(selected))}`}
-                  bold
-                  color={
-                    selected.type === "INCOME"
-                      ? "text-green-600"
-                      : "text-red-600"
-                  }
-                />
-              </div>
+                    <div className="border-t-2 border-black pt-3 mt-1">
+                      <DetailRow
+                        label="Total"
+                        value={`${signFor(total)}${formatCurrency(total)}`}
+                        bold
+                        color={isExpense ? "text-red-600" : "text-green-600"}
+                      />
+                    </div>
+                  </>
+                );
+              })()}
 
               {selected.notes && (
                 <div className="border-t-2 border-dashed border-gray-300 pt-3 mt-1">
@@ -289,7 +296,6 @@ export default function TransactionsPage() {
                   <p className="text-base">{selected.notes}</p>
                 </div>
               )}
-
             </div>
           </div>
         </div>
