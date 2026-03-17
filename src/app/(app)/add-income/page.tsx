@@ -70,8 +70,8 @@ export default function AddIncomePage() {
 
   const handleSubmit = async () => {
     const route = isInterestSelected
-      ? API_ROUTES.INTEREST_INCOME
-      : API_ROUTES.SALE;
+      ? API_ROUTES.INCOME_INTEREST
+      : API_ROUTES.INCOME_SALE;
     const body = isInterestSelected
       ? {
           cardAmount: parseFloat(cardAmount) || 0,
