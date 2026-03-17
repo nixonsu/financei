@@ -1,7 +1,15 @@
 "use client";
 
 import { API_ROUTES } from "@/src/constants/routes";
-import { UserIcon, XIcon } from "@phosphor-icons/react";
+import type { Icon } from "@phosphor-icons/react";
+import {
+  ArrowsLeftRightIcon,
+  BankIcon,
+  BriefcaseIcon,
+  StorefrontIcon,
+  UserIcon,
+  XIcon,
+} from "@phosphor-icons/react";
 import { useCallback, useEffect, useState } from "react";
 
 type TransactionDTO = {
@@ -12,7 +20,13 @@ type TransactionDTO = {
   cashAmount: string;
   notes: string | null;
   occurredAt: string;
-  client: { id: number; firstName: string; lastName: string } | null;
+  client: {
+    id: number;
+    firstName: string;
+    lastName: string;
+    phoneNumber: string | null;
+    email: string | null;
+  } | null;
 };
 
 const CATEGORY_LABELS: Record<TransactionDTO["category"], string> = {
@@ -21,6 +35,22 @@ const CATEGORY_LABELS: Record<TransactionDTO["category"], string> = {
   BUSINESS: "Business expense",
   PERSONAL: "Personal expense",
   CONVERT: "Conversion",
+};
+
+const CATEGORY_ICONS: Record<TransactionDTO["category"], Icon> = {
+  SALE: StorefrontIcon,
+  INTEREST: BankIcon,
+  BUSINESS: BriefcaseIcon,
+  PERSONAL: UserIcon,
+  CONVERT: ArrowsLeftRightIcon,
+};
+
+const CATEGORY_ICON_BG: Record<TransactionDTO["category"], string> = {
+  SALE: "bg-green-100",
+  INTEREST: "bg-yellow-100",
+  BUSINESS: "bg-red-100",
+  PERSONAL: "bg-pink-100",
+  CONVERT: "bg-blue-100",
 };
 
 function toISODate(date: Date): string {
@@ -147,8 +177,11 @@ export default function TransactionsPage() {
                           : ""
                       }`}
                     >
-                      <div className="shrink-0 w-10 h-10 border-2 border-black flex items-center justify-center bg-gray-100">
-                        <UserIcon size={22} weight="bold" />
+                      <div className={`shrink-0 w-10 h-10 border-2 border-black flex items-center justify-center ${CATEGORY_ICON_BG[tx.category]}`}>
+                        {(() => {
+                          const Icon = CATEGORY_ICONS[tx.category];
+                          return <Icon size={22} weight="bold" />;
+                        })()}
                       </div>
 
                       <div className="flex-1 min-w-0">
@@ -204,11 +237,26 @@ export default function TransactionsPage() {
 
             <div className="flex flex-col gap-3">
               {selected.client && (
-                <DetailRow
-                  label="Client"
-                  value={`${selected.client.firstName} ${selected.client.lastName}`}
-                />
+                <div className="pb-3 mb-1 border-b-2 border-black">
+                  <p className="text-sm font-bold italic mb-2">Client</p>
+                  <div className="flex flex-col gap-2">
+                    <DetailRow
+                      label="Name"
+                      value={`${selected.client.firstName} ${selected.client.lastName}`}
+                    />
+                    {selected.client.email && (
+                      <DetailRow label="Email" value={selected.client.email} />
+                    )}
+                    {selected.client.phoneNumber && (
+                      <DetailRow
+                        label="Phone"
+                        value={selected.client.phoneNumber}
+                      />
+                    )}
+                  </div>
+                </div>
               )}
+
               <DetailRow
                 label="Date"
                 value={formatDateHeading(selected.occurredAt.slice(0, 10))}
@@ -241,6 +289,7 @@ export default function TransactionsPage() {
                   <p className="text-base">{selected.notes}</p>
                 </div>
               )}
+
             </div>
           </div>
         </div>
