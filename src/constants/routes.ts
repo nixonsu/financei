@@ -11,6 +11,7 @@ export const API_ROUTES = {
   EXPENSE_BUSINESS: "/api/expense/business",
   CONVERSION_CASH_TO_CARD: "/api/conversions/cash-to-card",
   CONVERSION_CARD_TO_CASH: "/api/conversions/card-to-cash",
+  TRANSACTIONS: "/api/transactions",
 } as const;
 
 export const UI_ROUTES = {
