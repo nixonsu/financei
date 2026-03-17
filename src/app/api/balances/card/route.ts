@@ -1,8 +1,16 @@
 import { updateCardBalance } from "@/src/features/balances/balance-service";
+import { parseRequestBody } from "@/src/utils/validation";
+import { z } from "zod";
+
+const cardBalanceSchema = z.object({
+  total: z.number().min(0),
+});
 
 export async function POST(request: Request): Promise<Response> {
   try {
-    const { total } = await request.json();
+    const parsed = await parseRequestBody(request, cardBalanceSchema);
+    if (!parsed.success) return parsed.response;
+    const { total } = parsed.data;
 
     await updateCardBalance(1, total);
 
