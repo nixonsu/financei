@@ -56,3 +56,49 @@ export async function createSale(
 
   return transaction;
 }
+
+export async function createPersonalExpense(
+  businessId: number,
+  date: string | Date,
+  notes: string,
+  cardAmount: number,
+  cashAmount: number,
+): Promise<Transaction> {
+  const transaction = await prisma.transaction.create({
+    data: {
+      business: { connect: { id: businessId } },
+      type: TransactionType.EXPENSE,
+      category: TransactionCategory.PERSONAL,
+      cardAmount,
+      cashAmount,
+      notes,
+      occurredAt: new Date(date),
+      updatedAt: new Date(),
+    },
+  });
+
+  return transaction;
+}
+
+export async function createBusinessExpense(
+  businessId: number,
+  date: string | Date,
+  notes: string,
+  cardAmount: number,
+  cashAmount: number,
+): Promise<Transaction> {
+  const transaction = await prisma.transaction.create({
+    data: {
+      business: { connect: { id: businessId } },
+      type: TransactionType.EXPENSE,
+      category: TransactionCategory.BUSINESS,
+      cardAmount,
+      cashAmount,
+      notes,
+      occurredAt: new Date(date),
+      updatedAt: new Date(),
+    },
+  });
+
+  return transaction;
+}
