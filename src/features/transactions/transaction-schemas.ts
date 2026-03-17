@@ -21,6 +21,14 @@ export const baseTransactionSchema = z
   .object({ cardAmount, cashAmount, date, notes })
   .refine(hasAmount, { message: HAS_AMOUNT_MESSAGE });
 
+export const conversionSchema = z.object({
+  amount: z
+    .number({ error: "Amount must be a number" })
+    .positive("Amount must be greater than 0"),
+  date,
+  notes,
+});
+
 export const saleTransactionSchema = z
   .object({
     cardAmount,

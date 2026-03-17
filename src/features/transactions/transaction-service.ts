@@ -1,4 +1,5 @@
 import {
+  Prisma,
   PrismaClient,
   Transaction,
   TransactionCategory,
@@ -101,4 +102,78 @@ export async function createBusinessExpense(
   });
 
   return transaction;
+}
+
+export async function createCashToCardConversion(
+  businessId: number,
+  date: string | Date,
+  notes: string,
+  amount: number,
+): Promise<[Transaction, Transaction]> {
+  const occurredAt = new Date(date);
+  const shared: Partial<Prisma.TransactionCreateInput> = {
+    business: { connect: { id: businessId } },
+    category: TransactionCategory.CONVERT,
+    notes,
+    occurredAt,
+    updatedAt: new Date(),
+  };
+
+  const [income, expense] = await prisma.$transaction([
+    prisma.transaction.create({
+      data: {
+        ...shared,
+        type: TransactionType.INCOME,
+        cardAmount: amount,
+        cashAmount: 0,
+      } as Prisma.TransactionCreateInput,
+    }),
+    prisma.transaction.create({
+      data: {
+        ...shared,
+        type: TransactionType.EXPENSE,
+        cardAmount: 0,
+        cashAmount: amount,
+      } as Prisma.TransactionCreateInput,
+    }),
+  ]);
+
+  return [income, expense];
+}
+
+export async function createCardToCashConversion(
+  businessId: number,
+  date: string | Date,
+  notes: string,
+  amount: number,
+): Promise<[Transaction, Transaction]> {
+  const occurredAt = new Date(date);
+  const shared: Partial<Prisma.TransactionCreateInput> = {
+    business: { connect: { id: businessId } },
+    category: TransactionCategory.CONVERT,
+    notes,
+    occurredAt,
+    updatedAt: new Date(),
+  };
+
+  const [income, expense] = await prisma.$transaction([
+    prisma.transaction.create({
+      data: {
+        ...shared,
+        type: TransactionType.INCOME,
+        cardAmount: 0,
+        cashAmount: amount,
+      } as Prisma.TransactionCreateInput,
+    }),
+    prisma.transaction.create({
+      data: {
+        ...shared,
+        type: TransactionType.EXPENSE,
+        cardAmount: amount,
+        cashAmount: 0,
+      } as Prisma.TransactionCreateInput,
+    }),
+  ]);
+
+  return [income, expense];
 }

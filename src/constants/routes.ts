@@ -9,6 +9,8 @@ export const API_ROUTES = {
   INCOME_INTEREST: "/api/income/interest",
   EXPENSE_PERSONAL: "/api/expense/personal",
   EXPENSE_BUSINESS: "/api/expense/business",
+  CONVERSION_CASH_TO_CARD: "/api/conversions/cash-to-card",
+  CONVERSION_CARD_TO_CASH: "/api/conversions/card-to-cash",
 } as const;
 
 export const UI_ROUTES = {
