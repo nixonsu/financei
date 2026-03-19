@@ -50,7 +50,7 @@ export default function AddExpensePage() {
     }
 
     showToast(data.message);
-    router.push(UI_ROUTES.HOME);
+    router.push(UI_ROUTES.TRANSACTIONS);
   };
 
   return (

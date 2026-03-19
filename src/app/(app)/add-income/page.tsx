@@ -100,7 +100,7 @@ export default function AddIncomePage() {
     }
 
     showToast(data.message);
-    router.push(UI_ROUTES.HOME);
+    router.push(UI_ROUTES.TRANSACTIONS);
   };
 
   return (
