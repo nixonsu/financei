@@ -15,7 +15,11 @@ export default function ClientsPage() {
   const [search, setSearch] = useState("");
   const [syncing, setSyncing] = useState(false);
 
-  const { data: clients, loading, refetch } = useFetch<Client[]>(API_ROUTES.CLIENTS);
+  const {
+    data: clients,
+    loading,
+    refetch,
+  } = useFetch<Client[]>(API_ROUTES.CLIENTS);
 
   const handleSync = async () => {
     setSyncing(true);
@@ -54,7 +58,7 @@ export default function ClientsPage() {
 
   return (
     <div className="flex flex-col gap-5">
-      <h1 className="text-2xl font-bold italic">Clients</h1>
+      <h1 className="text-2xl font-bold">Clients</h1>
 
       <div className="flex items-stretch gap-2">
         <Input
@@ -107,7 +111,9 @@ export default function ClientsPage() {
                     </h2>
                     <div className="text-sm text-gray-600 dark:text-gray-400 mt-0.5">
                       {client.phoneNumber && <p>{client.phoneNumber}</p>}
-                      {client.email && <p className="truncate">{client.email}</p>}
+                      {client.email && (
+                        <p className="truncate">{client.email}</p>
+                      )}
                     </div>
                   </div>
                 </div>

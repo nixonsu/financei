@@ -27,7 +27,12 @@ import {
 import { useState } from "react";
 
 type TransactionType = "INCOME" | "EXPENSE";
-type TransactionCategory = "SALE" | "INTEREST" | "BUSINESS" | "PERSONAL" | "CONVERT";
+type TransactionCategory =
+  | "SALE"
+  | "INTEREST"
+  | "BUSINESS"
+  | "PERSONAL"
+  | "CONVERT";
 
 const TYPE_OPTIONS: { value: TransactionType | "ALL"; label: string }[] = [
   { value: "ALL", label: "All" },
@@ -35,7 +40,10 @@ const TYPE_OPTIONS: { value: TransactionType | "ALL"; label: string }[] = [
   { value: "EXPENSE", label: "Expense" },
 ];
 
-const CATEGORY_OPTIONS: { value: TransactionCategory | "ALL"; label: string }[] = [
+const CATEGORY_OPTIONS: {
+  value: TransactionCategory | "ALL";
+  label: string;
+}[] = [
   { value: "ALL", label: "All" },
   { value: "SALE", label: "Sale" },
   { value: "INTEREST", label: "Interest" },
@@ -121,7 +129,9 @@ export default function TransactionsPage() {
   const [customFrom, setCustomFrom] = useState(getDefaultFinancialYear().from);
   const [customTo, setCustomTo] = useState(getDefaultFinancialYear().to);
   const [typeFilter, setTypeFilter] = useState<TransactionType | "ALL">("ALL");
-  const [categoryFilter, setCategoryFilter] = useState<TransactionCategory | "ALL">("ALL");
+  const [categoryFilter, setCategoryFilter] = useState<
+    TransactionCategory | "ALL"
+  >("ALL");
   const [selected, setSelected] = useState<TransactionDTO | null>(null);
   const [editing, setEditing] = useState(false);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
@@ -208,11 +218,15 @@ export default function TransactionsPage() {
     const { from, to } = periodToDateRange(period, customFrom, customTo);
     return `${API_ROUTES.TRANSACTIONS}?${new URLSearchParams({ from, to })}`;
   };
-  const { data: transactions, loading, refetch } = useFetch<TransactionDTO[]>(txUrl);
+  const {
+    data: transactions,
+    loading,
+    refetch,
+  } = useFetch<TransactionDTO[]>(txUrl);
 
   return (
     <div className="flex flex-col gap-5">
-      <h1 className="text-2xl font-bold italic">Transactions</h1>
+      <h1 className="text-2xl font-bold">Transactions</h1>
 
       {/* Period selector */}
       <div className="grid grid-cols-5 border-2 border-black">
@@ -256,7 +270,12 @@ export default function TransactionsPage() {
       )}
 
       {/* Type filter */}
-      <div className={`grid border-2 border-black`} style={{ gridTemplateColumns: `repeat(${TYPE_OPTIONS.length}, minmax(0, 1fr))` }}>
+      <div
+        className={`grid border-2 border-black`}
+        style={{
+          gridTemplateColumns: `repeat(${TYPE_OPTIONS.length}, minmax(0, 1fr))`,
+        }}
+      >
         {TYPE_OPTIONS.map((opt) => (
           <button
             key={opt.value}
@@ -274,7 +293,12 @@ export default function TransactionsPage() {
       </div>
 
       {/* Category filter */}
-      <div className={`grid border-2 border-black`} style={{ gridTemplateColumns: `repeat(${CATEGORY_OPTIONS.length}, minmax(0, 1fr))` }}>
+      <div
+        className={`grid border-2 border-black`}
+        style={{
+          gridTemplateColumns: `repeat(${CATEGORY_OPTIONS.length}, minmax(0, 1fr))`,
+        }}
+      >
         {CATEGORY_OPTIONS.map((opt) => (
           <button
             key={opt.value}
@@ -300,7 +324,8 @@ export default function TransactionsPage() {
         {(txs) => {
           const filtered = txs.filter((tx) => {
             if (typeFilter !== "ALL" && tx.type !== typeFilter) return false;
-            if (categoryFilter !== "ALL" && tx.category !== categoryFilter) return false;
+            if (categoryFilter !== "ALL" && tx.category !== categoryFilter)
+              return false;
             return true;
           });
 
@@ -332,7 +357,9 @@ export default function TransactionsPage() {
                           type="button"
                           onClick={() => openSelected(tx)}
                           className={`w-full flex items-center gap-3 px-4 py-3 text-left cursor-pointer hover:bg-gray-50 active:bg-gray-100 ${
-                            i < dateTxs.length - 1 ? "border-b-2 border-black" : ""
+                            i < dateTxs.length - 1
+                              ? "border-b-2 border-black"
+                              : ""
                           }`}
                         >
                           <div

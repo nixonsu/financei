@@ -36,7 +36,8 @@ export function periodToDateRange(
 
 export function getDefaultFinancialYear(): { from: string; to: string } {
   const today = new Date();
-  const year = today.getMonth() >= 6 ? today.getFullYear() : today.getFullYear() - 1;
+  const year =
+    today.getMonth() >= 6 ? today.getFullYear() : today.getFullYear() - 1;
   return {
     from: `${year}-07-01`,
     to: `${year + 1}-06-30`,
