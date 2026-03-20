@@ -7,6 +7,12 @@ import Input from "@/src/components/Input";
 import { showToast } from "@/src/components/Toast";
 import { API_ROUTES } from "@/src/constants/routes";
 import { useFetch } from "@/src/hooks/useFetch";
+import {
+  PERIODS,
+  type Period,
+  getDefaultFinancialYear,
+  periodToDateRange,
+} from "@/src/utils/period-filter";
 import type { Icon } from "@phosphor-icons/react";
 import {
   ArrowsLeftRightIcon,
@@ -19,22 +25,6 @@ import {
   XIcon,
 } from "@phosphor-icons/react";
 import { useState } from "react";
-
-type Period = "1m" | "3m" | "1y" | "all" | "custom";
-
-const PERIODS: { value: Period; label: string }[] = [
-  { value: "1m", label: "1M" },
-  { value: "3m", label: "3M" },
-  { value: "1y", label: "1Y" },
-  { value: "all", label: "All" },
-  { value: "custom", label: "Custom" },
-];
-
-const PERIOD_DAYS: Record<string, number> = {
-  "1m": 30,
-  "3m": 90,
-  "1y": 365,
-};
 
 type TransactionType = "INCOME" | "EXPENSE";
 type TransactionCategory = "SALE" | "INTEREST" | "BUSINESS" | "PERSONAL" | "CONVERT";
@@ -95,20 +85,6 @@ const CATEGORY_ICON_BG: Record<TransactionDTO["category"], string> = {
   CONVERT: "bg-blue-100",
 };
 
-function toISODate(date: Date): string {
-  return date.toISOString().slice(0, 10);
-}
-
-function periodDates(period: Period, customFrom: string, customTo: string): { from: string; to: string } {
-  if (period === "custom") return { from: customFrom, to: customTo };
-  const to = new Date();
-  const from = new Date();
-  const days = PERIOD_DAYS[period];
-  if (days) from.setDate(from.getDate() - days);
-  else from.setFullYear(2000);
-  return { from: toISODate(from), to: toISODate(to) };
-}
-
 function formatDateHeading(iso: string): string {
   const [year, month, day] = iso.split("-");
   const date = new Date(Number(year), Number(month) - 1, Number(day));
@@ -142,8 +118,8 @@ function groupByDate(
 
 export default function TransactionsPage() {
   const [period, setPeriod] = useState<Period>("1m");
-  const [customFrom, setCustomFrom] = useState(() => toISODate(new Date()));
-  const [customTo, setCustomTo] = useState(() => toISODate(new Date()));
+  const [customFrom, setCustomFrom] = useState(getDefaultFinancialYear().from);
+  const [customTo, setCustomTo] = useState(getDefaultFinancialYear().to);
   const [typeFilter, setTypeFilter] = useState<TransactionType | "ALL">("ALL");
   const [categoryFilter, setCategoryFilter] = useState<TransactionCategory | "ALL">("ALL");
   const [selected, setSelected] = useState<TransactionDTO | null>(null);
@@ -229,7 +205,7 @@ export default function TransactionsPage() {
   };
 
   const txUrl = () => {
-    const { from, to } = periodDates(period, customFrom, customTo);
+    const { from, to } = periodToDateRange(period, customFrom, customTo);
     return `${API_ROUTES.TRANSACTIONS}?${new URLSearchParams({ from, to })}`;
   };
   const { data: transactions, loading, refetch } = useFetch<TransactionDTO[]>(txUrl);

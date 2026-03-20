@@ -4,28 +4,15 @@ import FetchContent from "@/src/components/FetchContent";
 import { API_ROUTES, UI_ROUTES } from "@/src/constants/routes";
 import type { Overview } from "@/src/features/overview/overview-service";
 import { useFetch } from "@/src/hooks/useFetch";
+import {
+  PERIODS,
+  type Period,
+  periodToDateRange,
+  getDefaultFinancialYear
+} from "@/src/utils/period-filter";
 import { CaretRightIcon } from "@phosphor-icons/react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-
-type Period = "1m" | "3m" | "1y" | "all" | "custom";
-
-const PERIODS: { value: Period; label: string }[] = [
-  { value: "1m", label: "1M" },
-  { value: "3m", label: "3M" },
-  { value: "1y", label: "1Y" },
-  { value: "all", label: "All" },
-  { value: "custom", label: "Custom" },
-];
-
-function getDefaultFinancialYear(): { from: string; to: string } {
-  const today = new Date();
-  const year = today.getMonth() >= 6 ? today.getFullYear() : today.getFullYear() - 1;
-  return {
-    from: `${year}-07-01`,
-    to: `${year + 1}-06-30`,
-  };
-}
 
 function fmt(n: number): string {
   return `$${Math.abs(n).toLocaleString("en-AU", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -42,14 +29,8 @@ export default function Home() {
   const [customTo, setCustomTo] = useState(() => getDefaultFinancialYear().to);
 
   const overviewUrl = () => {
-    const params = new URLSearchParams();
-    if (period === "custom") {
-      params.set("from", customFrom);
-      params.set("to", customTo);
-    } else {
-      params.set("period", period);
-    }
-    return `${API_ROUTES.OVERVIEW}?${params}`;
+    const { from, to } = periodToDateRange(period, customFrom, customTo);
+    return `${API_ROUTES.OVERVIEW}?${new URLSearchParams({ from, to })}`;
   };
 
   const { data: overview, loading } = useFetch<Overview>(overviewUrl);
