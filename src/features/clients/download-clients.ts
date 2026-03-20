@@ -4,7 +4,7 @@ import path from "path";
 import { chromium, type BrowserContext } from "playwright";
 
 const AUTH_STATE_PATH = path.resolve(".acuity-auth-state.json");
-const DOWNLOAD_DIR = path.resolve("src/features/clients");
+const DOWNLOAD_DIR = path.resolve("data");
 const CSV_FILENAME = "clients-export.csv";
 
 const ACUITY_LOGIN_URL =
@@ -187,6 +187,7 @@ async function handle2FA(page: import("playwright").Page) {
 
 async function downloadExport(context: BrowserContext): Promise<string> {
   const page = await context.newPage();
+  fs.mkdirSync(DOWNLOAD_DIR, { recursive: true });
   const csvPath = path.join(DOWNLOAD_DIR, CSV_FILENAME);
 
   try {
