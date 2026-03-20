@@ -20,6 +20,22 @@ import {
 } from "@phosphor-icons/react";
 import { useState } from "react";
 
+type Period = "1m" | "3m" | "1y" | "all" | "custom";
+
+const PERIODS: { value: Period; label: string }[] = [
+  { value: "1m", label: "1M" },
+  { value: "3m", label: "3M" },
+  { value: "1y", label: "1Y" },
+  { value: "all", label: "All" },
+  { value: "custom", label: "Custom" },
+];
+
+const PERIOD_DAYS: Record<string, number> = {
+  "1m": 30,
+  "3m": 90,
+  "1y": 365,
+};
+
 type TransactionType = "INCOME" | "EXPENSE";
 type TransactionCategory = "SALE" | "INTEREST" | "BUSINESS" | "PERSONAL" | "CONVERT";
 
@@ -83,10 +99,14 @@ function toISODate(date: Date): string {
   return date.toISOString().slice(0, 10);
 }
 
-function defaultFrom(): string {
-  const d = new Date();
-  d.setMonth(d.getMonth() - 1);
-  return toISODate(d);
+function periodDates(period: Period, customFrom: string, customTo: string): { from: string; to: string } {
+  if (period === "custom") return { from: customFrom, to: customTo };
+  const to = new Date();
+  const from = new Date();
+  const days = PERIOD_DAYS[period];
+  if (days) from.setDate(from.getDate() - days);
+  else from.setFullYear(2000);
+  return { from: toISODate(from), to: toISODate(to) };
 }
 
 function formatDateHeading(iso: string): string {
@@ -121,8 +141,9 @@ function groupByDate(
 }
 
 export default function TransactionsPage() {
-  const [from, setFrom] = useState(defaultFrom);
-  const [to, setTo] = useState(() => toISODate(new Date()));
+  const [period, setPeriod] = useState<Period>("1m");
+  const [customFrom, setCustomFrom] = useState(() => toISODate(new Date()));
+  const [customTo, setCustomTo] = useState(() => toISODate(new Date()));
   const [typeFilter, setTypeFilter] = useState<TransactionType | "ALL">("ALL");
   const [categoryFilter, setCategoryFilter] = useState<TransactionCategory | "ALL">("ALL");
   const [selected, setSelected] = useState<TransactionDTO | null>(null);
@@ -207,34 +228,56 @@ export default function TransactionsPage() {
     }
   };
 
-  const txUrl = () => `${API_ROUTES.TRANSACTIONS}?${new URLSearchParams({ from, to })}`;
+  const txUrl = () => {
+    const { from, to } = periodDates(period, customFrom, customTo);
+    return `${API_ROUTES.TRANSACTIONS}?${new URLSearchParams({ from, to })}`;
+  };
   const { data: transactions, loading, refetch } = useFetch<TransactionDTO[]>(txUrl);
 
   return (
     <div className="flex flex-col gap-5">
       <h1 className="text-2xl font-bold italic">Transactions</h1>
 
-      {/* Date filter */}
-      <div className="flex items-center gap-3">
-        <div className="flex-1 flex flex-col gap-1">
-          <label className="text-sm font-semibold">From</label>
-          <input
-            type="date"
-            value={from}
-            onChange={(e) => setFrom(e.target.value)}
-            className="w-full border-black border-2 p-2.5 bg-white focus:outline-none focus:shadow-[2px_2px_0px_rgba(0,0,0,1)]"
-          />
-        </div>
-        <div className="flex-1 flex flex-col gap-1">
-          <label className="text-sm font-semibold">To</label>
-          <input
-            type="date"
-            value={to}
-            onChange={(e) => setTo(e.target.value)}
-            className="w-full border-black border-2 p-2.5 bg-white focus:outline-none focus:shadow-[2px_2px_0px_rgba(0,0,0,1)]"
-          />
-        </div>
+      {/* Period selector */}
+      <div className="grid grid-cols-5 border-2 border-black">
+        {PERIODS.map((p) => (
+          <button
+            key={p.value}
+            type="button"
+            onClick={() => setPeriod(p.value)}
+            className={`cursor-pointer py-2.5 text-sm font-bold border-r-2 border-black last:border-r-0 transition-colors ${
+              period === p.value
+                ? "bg-cyan-300"
+                : "bg-white hover:bg-gray-50 active:bg-gray-100"
+            }`}
+          >
+            {p.label}
+          </button>
+        ))}
       </div>
+
+      {period === "custom" && (
+        <div className="flex gap-3">
+          <div className="flex-1 flex flex-col gap-1">
+            <label className="text-sm font-semibold">From</label>
+            <input
+              type="date"
+              value={customFrom}
+              onChange={(e) => setCustomFrom(e.target.value)}
+              className="w-full border-black border-2 p-2.5 bg-white focus:outline-none focus:shadow-[2px_2px_0px_rgba(0,0,0,1)]"
+            />
+          </div>
+          <div className="flex-1 flex flex-col gap-1">
+            <label className="text-sm font-semibold">To</label>
+            <input
+              type="date"
+              value={customTo}
+              onChange={(e) => setCustomTo(e.target.value)}
+              className="w-full border-black border-2 p-2.5 bg-white focus:outline-none focus:shadow-[2px_2px_0px_rgba(0,0,0,1)]"
+            />
+          </div>
+        </div>
+      )}
 
       {/* Type filter */}
       <div className={`grid border-2 border-black`} style={{ gridTemplateColumns: `repeat(${TYPE_OPTIONS.length}, minmax(0, 1fr))` }}>
