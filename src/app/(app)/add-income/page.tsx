@@ -8,11 +8,12 @@ import Select from "@/src/components/Select";
 import { showToast } from "@/src/components/Toast";
 import { API_ROUTES, UI_ROUTES } from "@/src/constants/routes";
 import {
-  CaretRightIcon,
+  CaretDownIcon,
   MagnifyingGlassIcon,
   UserIcon,
   XIcon,
 } from "@phosphor-icons/react";
+import classNames from "classnames";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 
@@ -120,14 +121,22 @@ export default function AddIncomePage() {
             type="button"
             className="flex w-full items-center gap-3 bg-white px-4 py-3 border-black border-2 focus:outline-none focus:shadow-[2px_2px_0px_rgba(0,0,0,1)] cursor-pointer"
             onClick={() => setClientPickerOpen(!clientPickerOpen)}
+            aria-expanded={clientPickerOpen}
+            aria-haspopup="true"
           >
             <UserIcon size={22} weight="bold" />
             <span className="flex-1 text-left text-lg border-b-2 border-black pb-0.5 truncate">
               {selectedClient
                 ? `${selectedClient.firstName} ${selectedClient.lastName}`
-                : "Select client"}
+                : "Who did you bless today?"}
             </span>
-            <CaretRightIcon size={20} weight="bold" />
+            <CaretDownIcon
+              size={20}
+              weight="bold"
+              className={classNames("shrink-0 transition-transform", {
+                "rotate-180": clientPickerOpen,
+              })}
+            />
           </button>
 
           {clientPickerOpen && (

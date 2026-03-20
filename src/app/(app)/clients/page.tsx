@@ -53,12 +53,14 @@ export default function ClientsPage() {
   }, [filteredClients]);
 
   return (
-    <div className="px-6 pb-8">
-      <div className="mt-4 flex items-stretch gap-2">
+    <div className="flex flex-col gap-5">
+      <h1 className="text-2xl font-bold italic">Clients</h1>
+
+      <div className="flex items-stretch gap-2">
         <Input
           value={search}
           onChange={setSearch}
-          placeholder="Search by their human label..."
+          placeholder="Looking for someone?"
           className="w-full!"
         />
         <IconButton
@@ -73,7 +75,7 @@ export default function ClientsPage() {
         </IconButton>
       </div>
 
-      <div className="mt-4 flex flex-col">
+      <div className="flex flex-col">
         <FetchContent
           data={clients}
           loading={loading}
