@@ -1,4 +1,5 @@
 import { getOverview } from "@/src/features/overview/overview-service";
+import { endOfUtcDay, startOfUtcDay } from "@/src/utils/query-date-range";
 
 export async function GET(request: Request): Promise<Response> {
   const { searchParams } = new URL(request.url);
@@ -12,8 +13,8 @@ export async function GET(request: Request): Promise<Response> {
     );
   }
 
-  const fromDate = new Date(from);
-  const toDate = new Date(to);
+  const fromDate = startOfUtcDay(from);
+  const toDate = endOfUtcDay(to);
 
   if (isNaN(fromDate.getTime()) || isNaN(toDate.getTime())) {
     return new Response(
