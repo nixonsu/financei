@@ -20,6 +20,24 @@ import {
 } from "@phosphor-icons/react";
 import { useState } from "react";
 
+type TransactionType = "INCOME" | "EXPENSE";
+type TransactionCategory = "SALE" | "INTEREST" | "BUSINESS" | "PERSONAL" | "CONVERT";
+
+const TYPE_OPTIONS: { value: TransactionType | "ALL"; label: string }[] = [
+  { value: "ALL", label: "All" },
+  { value: "INCOME", label: "Income" },
+  { value: "EXPENSE", label: "Expense" },
+];
+
+const CATEGORY_OPTIONS: { value: TransactionCategory | "ALL"; label: string }[] = [
+  { value: "ALL", label: "All" },
+  { value: "SALE", label: "Sale" },
+  { value: "INTEREST", label: "Interest" },
+  { value: "BUSINESS", label: "Business" },
+  { value: "PERSONAL", label: "Personal" },
+  { value: "CONVERT", label: "Convert" },
+];
+
 type TransactionDTO = {
   id: number;
   type: "INCOME" | "EXPENSE";
@@ -105,6 +123,8 @@ function groupByDate(
 export default function TransactionsPage() {
   const [from, setFrom] = useState(defaultFrom);
   const [to, setTo] = useState(() => toISODate(new Date()));
+  const [typeFilter, setTypeFilter] = useState<TransactionType | "ALL">("ALL");
+  const [categoryFilter, setCategoryFilter] = useState<TransactionCategory | "ALL">("ALL");
   const [selected, setSelected] = useState<TransactionDTO | null>(null);
   const [editing, setEditing] = useState(false);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
@@ -216,6 +236,42 @@ export default function TransactionsPage() {
         </div>
       </div>
 
+      {/* Type filter */}
+      <div className={`grid border-2 border-black`} style={{ gridTemplateColumns: `repeat(${TYPE_OPTIONS.length}, minmax(0, 1fr))` }}>
+        {TYPE_OPTIONS.map((opt) => (
+          <button
+            key={opt.value}
+            type="button"
+            onClick={() => setTypeFilter(opt.value)}
+            className={`cursor-pointer py-2 text-sm font-bold border-r-2 border-black last:border-r-0 transition-colors ${
+              typeFilter === opt.value
+                ? "bg-cyan-300"
+                : "bg-white hover:bg-gray-50 active:bg-gray-100"
+            }`}
+          >
+            {opt.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Category filter */}
+      <div className={`grid border-2 border-black`} style={{ gridTemplateColumns: `repeat(${CATEGORY_OPTIONS.length}, minmax(0, 1fr))` }}>
+        {CATEGORY_OPTIONS.map((opt) => (
+          <button
+            key={opt.value}
+            type="button"
+            onClick={() => setCategoryFilter(opt.value)}
+            className={`cursor-pointer py-2 text-xs font-bold border-r-2 border-black last:border-r-0 transition-colors ${
+              categoryFilter === opt.value
+                ? "bg-cyan-300"
+                : "bg-white hover:bg-gray-50 active:bg-gray-100"
+            }`}
+          >
+            {opt.label}
+          </button>
+        ))}
+      </div>
+
       <FetchContent
         data={transactions}
         loading={loading}
@@ -223,7 +279,21 @@ export default function TransactionsPage() {
         emptyMessage="No transactions found for this period."
       >
         {(txs) => {
-          const grouped = groupByDate(txs);
+          const filtered = txs.filter((tx) => {
+            if (typeFilter !== "ALL" && tx.type !== typeFilter) return false;
+            if (categoryFilter !== "ALL" && tx.category !== categoryFilter) return false;
+            return true;
+          });
+
+          if (filtered.length === 0) {
+            return (
+              <p className="text-center text-gray-500 py-8">
+                No transactions match the selected filters.
+              </p>
+            );
+          }
+
+          const grouped = groupByDate(filtered);
           return (
             <div className="flex flex-col gap-6">
               {grouped.map(([date, dateTxs]) => (
