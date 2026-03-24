@@ -1,11 +1,12 @@
 "use client";
 
 import {
-  ArrowsLeftRightIcon,
-  CoinsIcon,
+  ArrowsCounterClockwiseIcon,
   GearIcon,
   HouseIcon,
   ListIcon,
+  MinusIcon,
+  PlusIcon,
   PlusSquareIcon,
   UserIcon,
 } from "@phosphor-icons/react";
@@ -110,42 +111,42 @@ export default function Navigation() {
               <button
                 type="button"
                 onClick={() => go("/add-income")}
-                className={`cursor-pointer absolute -left-32 -top-20 flex items-center justify-center p-1 border-3 bg-green-300 shadow transition duration-200 ${
+                className={`h-18 w-18  cursor-pointer absolute -left-32 -top-20 flex items-center justify-center p-1 border-3 bg-green-300 shadow transition duration-200 ${
                   fanoutOpen
                     ? "pointer-events-auto scale-100 opacity-100"
                     : "pointer-events-none scale-90 opacity-0"
                 }`}
                 aria-label="Add income"
               >
-                <CoinsIcon weight="fill" size={56} />
+                <PlusIcon weight="bold" size={24} />
               </button>
 
               {/* Expense */}
               <button
                 type="button"
                 onClick={() => go("/add-expense")}
-                className={`cursor-pointer absolute left-1/2 -top-20 -translate-x-1/2 flex items-center justify-center p-1 border-3 bg-red-300 shadow transition duration-200 ${
+                className={`h-18 w-18 cursor-pointer absolute left-1/2 -top-20 -translate-x-1/2 flex items-center justify-center p-1 border-3 bg-red-300 shadow transition duration-200 ${
                   fanoutOpen
                     ? "pointer-events-auto scale-100 opacity-100"
                     : "pointer-events-none scale-90 opacity-0"
                 }`}
                 aria-label="Add expense"
               >
-                <CoinsIcon weight="fill" size={56} />
+                <MinusIcon weight="bold" size={24} />
               </button>
 
               {/* Convert */}
               <button
                 type="button"
                 onClick={() => go("/add-convert")}
-                className={`cursor-pointer absolute -right-32 -top-20 flex items-center justify-center p-1 border-3 bg-blue-300 shadow transition duration-200 ${
+                className={`h-18 w-18 cursor-pointer absolute -right-32 -top-20 flex items-center justify-center p-1 border-3 bg-blue-300 shadow transition duration-200 ${
                   fanoutOpen
                     ? "pointer-events-auto scale-100 opacity-100"
                     : "pointer-events-none scale-90 opacity-0"
                 }`}
                 aria-label="Convert"
               >
-                <ArrowsLeftRightIcon weight="fill" size={56} />
+                <ArrowsCounterClockwiseIcon weight="fill" size={ICON_SIZE} />
               </button>
             </div>
           </div>
