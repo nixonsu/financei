@@ -245,7 +245,6 @@ async function main() {
     const expenseName = row[EXP.EXPENSE]?.trim() || "";
 
     if (!type || !dateRaw) continue;
-    if (expenseName.toUpperCase() === "EFTPOS FEE") continue;
 
     let occurredAt: Date;
     try {

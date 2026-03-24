@@ -86,7 +86,7 @@ export async function getOverview(
     expectedCashBalance,
     actualCardBalance: actualBalances.actualCardBalance,
     actualCashBalance: actualBalances.actualCashBalance,
-    variance: expectedTotal - actualTotal,
+    variance: actualTotal - expectedTotal,
 
     totalSalesRevenue: periodAggregates.salesRevenue,
     totalBusinessExpenses: periodAggregates.businessExpenses,
