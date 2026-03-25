@@ -41,7 +41,7 @@ function hasAuthState(): boolean {
 }
 
 async function createContext() {
-  const headless = process.env.PLAYWRIGHT_HEADLESS !== "false";
+  const headless = process.env.PLAYWRIGHT_HEADLESS === "false" ? false : true;
 
   const browser = await chromium.launch({ headless });
   const contextOptions: Parameters<typeof browser.newContext>[0] = {

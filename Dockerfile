@@ -6,11 +6,15 @@
 # This Dockerfile uses Node.js 24.13.0-slim, which was the latest LTS version at the time of writing.
 # To ensure security and compatibility, regularly update the NODE_VERSION ARG to the latest LTS version.
 ARG NODE_VERSION=24.13.0-slim
+ARG PLAYWRIGHT_IMAGE_TAG=v1.58.2-noble
 
 FROM node:${NODE_VERSION} AS dependencies
 
 # Set working directory
 WORKDIR /app
+
+# Avoid downloading browsers here; runner uses mcr.microsoft.com/playwright (browsers baked in)
+ENV PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
 
 # Copy package-related files first to leverage Docker's caching mechanism
 COPY package.json yarn.lock* package-lock.json* pnpm-lock.yaml* .npmrc* ./
@@ -71,49 +75,30 @@ RUN if [ -f package-lock.json ]; then \
 # Stage 3: Run Next.js application
 # ============================================
 
-FROM node:${NODE_VERSION} AS runner
+FROM mcr.microsoft.com/playwright:${PLAYWRIGHT_IMAGE_TAG} AS runner
 
-# Set working directory
 WORKDIR /app
 
-# Set production environment variables
 ENV NODE_ENV=production
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
-
-# Next.js collects completely anonymous telemetry data about general usage.
-# Learn more here: https://nextjs.org/telemetry
-# Uncomment the following line in case you want to disable telemetry during the run time.
 ENV NEXT_TELEMETRY_DISABLED=1
 
-# Copy production assets
-COPY --from=builder --chown=node:node /app/public ./public
+COPY --from=builder --chown=pwuser:pwuser /app/public ./public
 
-# Set the correct permission for prerender cache
-RUN mkdir .next
-RUN chown node:node .next
+RUN mkdir .next && chown pwuser:pwuser .next
 
-# Automatically leverage output traces to reduce image size
-# https://nextjs.org/docs/advanced-features/output-file-tracing
-COPY --from=builder --chown=node:node /app/.next/standalone ./
-COPY --from=builder --chown=node:node /app/.next/static ./.next/static
+COPY --from=builder --chown=pwuser:pwuser /app/.next/standalone ./
+COPY --from=builder --chown=pwuser:pwuser /app/.next/static ./.next/static
 
-# Standalone output does not always trace Playwright; copy it for runtime + CLI install
-COPY --from=dependencies /app/node_modules/playwright ./node_modules/playwright
-COPY --from=dependencies /app/node_modules/playwright-core ./node_modules/playwright-core
+COPY --from=dependencies --chown=pwuser:pwuser /app/node_modules/playwright ./node_modules/playwright
+COPY --from=dependencies --chown=pwuser:pwuser /app/node_modules/playwright-core ./node_modules/playwright-core
 
 # If you want to persist the fetch cache generated during the build so that
 # cached responses are available immediately on startup, uncomment this line:
-# COPY --from=builder --chown=node:node /app/.next/cache ./.next/cache
+# COPY --from=builder --chown=pwuser:pwuser /app/.next/cache ./.next/cache
 
-# Playwright (Chromium + OS libs) for server-side automation (e.g. Acuity sync)
-USER root
-ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
-RUN node ./node_modules/playwright/cli.js install --with-deps chromium \
-  && chown -R node:node /ms-playwright ./node_modules/playwright ./node_modules/playwright-core
-
-# Switch to non-root user for security best practices
-USER node
+USER pwuser
 
 # Expose port 3000 to allow HTTP traffic
 EXPOSE 3000
