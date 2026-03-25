@@ -1,6 +1,22 @@
 services:
+  app:
+    build:
+      context: .
+    image: financee-app
+    container_name: app
+    depends_on:
+      - db
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://postgres:password@db:5432/financee-db?schema=public
+      PORT: "3000"
+    ports:
+      - "3000:3000"
+    restart: unless-stopped
+
   db:
     image: postgres:16
+    container_name: db
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: password
