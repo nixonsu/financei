@@ -40,9 +40,9 @@ function periodVariance(r: ReconciliationRow): number {
 }
 
 function varianceClass(v: number): string {
-  if (v >= 0) return "text-green-600";
-  if (Math.abs(v) < 10) return "text-yellow-600";
-  return "text-red-600";
+  if (v >= 0) return "text-green-700";
+  if (Math.abs(v) < 10) return "text-yellow-700";
+  return "text-red-700";
 }
 
 export default function Home() {
@@ -164,10 +164,6 @@ export default function Home() {
         >
           End of month close
         </Button>
-        <p className="text-sm text-gray-500 leading-snug">
-          Record a reconciliation through the end of this month using the
-          balances shown below (rolling since your last close).
-        </p>
       </div>
 
       <Dialog
@@ -175,7 +171,7 @@ export default function Home() {
         onOpenChange={setCloseDialogOpen}
         title={
           closePeriod
-            ? `Close through ${formatYmdAu(closePeriod.endPeriod)}? This saves your current expected and actual card and cash totals for that period.`
+            ? `Close through ${formatYmdAu(closePeriod.endPeriod)}?`
             : "You can’t close this period right now."
         }
         confirmLabel="Close month"

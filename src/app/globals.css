@@ -60,15 +60,18 @@
   --color-lime-300: var(--vaia-meadow);
   --color-lime-400: color-mix(in srgb, var(--vaia-meadow) 86%, var(--vaia-ink));
 
-  /* Semantic money / status text — closer to full swatch strength */
+  /*
+   * Semantic money / status text — on white, mostly-swatch mixes read pale.
+   * Blend more ink so amounts stay clearly green/red/gold with stronger contrast.
+   */
   --color-green-100: color-mix(in srgb, var(--vaia-meadow) 52%, white);
-  --color-green-600: color-mix(in srgb, var(--vaia-meadow) 94%, var(--vaia-ink));
-  --color-green-700: color-mix(in srgb, var(--vaia-meadow) 86%, var(--vaia-ink));
+  --color-green-600: color-mix(in srgb, var(--vaia-meadow) 50%, var(--vaia-ink));
+  --color-green-700: color-mix(in srgb, var(--vaia-meadow) 40%, var(--vaia-ink));
 
-  --color-red-600: color-mix(in srgb, var(--vaia-tulips) 92%, var(--vaia-ink));
-  --color-red-700: color-mix(in srgb, var(--vaia-tulips) 82%, var(--vaia-ink));
+  --color-red-600: color-mix(in srgb, var(--vaia-tulips) 54%, var(--vaia-ink));
+  --color-red-700: color-mix(in srgb, var(--vaia-tulips) 44%, var(--vaia-ink));
 
-  --color-yellow-600: color-mix(in srgb, var(--vaia-daffodils) 88%, var(--vaia-ink));
+  --color-yellow-600: color-mix(in srgb, var(--vaia-daffodils) 42%, var(--vaia-ink));
 
   --color-blue-100: color-mix(in srgb, var(--vaia-clear-sky) 52%, white);
   --color-blue-200: color-mix(in srgb, var(--vaia-clear-sky) 68%, white);

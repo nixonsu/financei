@@ -119,7 +119,7 @@ export default function ClientsPage() {
                     <h2 className="text-lg font-semibold">
                       {client.firstName} {client.lastName}
                     </h2>
-                    <div className="text-sm text-gray-600 mt-0.5">
+                    <div className="text-sm text-gray-600 mt-0.5 opacity-50">
                       {client.phoneNumber && <p>{client.phoneNumber}</p>}
                       {client.email && (
                         <p className="truncate">{client.email}</p>
