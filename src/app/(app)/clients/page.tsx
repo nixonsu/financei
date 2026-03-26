@@ -8,7 +8,7 @@ import { showToast } from "@/src/components/Toast";
 import { API_ROUTES, UI_ROUTES } from "@/src/constants/routes";
 import { SyncResult } from "@/src/features/clients/client-service";
 import { useFetch } from "@/src/hooks/useFetch";
-import { ArrowsClockwiseIcon } from "@phosphor-icons/react";
+import { ArrowsClockwiseIcon, ArrowsCounterClockwiseIcon } from "@phosphor-icons/react";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 
@@ -75,8 +75,9 @@ export default function ClientsPage() {
           disabled={syncing}
           className="h-auto! w-auto! px-3"
         >
-          <ArrowsClockwiseIcon
-            size={20}
+          <ArrowsCounterClockwiseIcon
+            size={24}
+            weight="bold"
             className={syncing ? "animate-spin" : ""}
           />
         </IconButton>

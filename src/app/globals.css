@@ -30,6 +30,10 @@ body {
   overscroll-behavior-y: none; /* stops weird pull-to-refresh scroll */
 }
 
+dialog::backdrop {
+  background: rgba(0, 0, 0, 0.4);
+}
+
 @keyframes slide-up {
   0% {
     transform: translateY(100%);

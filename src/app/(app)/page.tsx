@@ -1,9 +1,17 @@
 "use client";
 
 import { User } from "@/generated/prisma/client";
+import Button from "@/src/components/Button";
+import Dialog from "@/src/components/Dialog";
 import FetchContent from "@/src/components/FetchContent";
+import { showToast } from "@/src/components/Toast";
 import { API_ROUTES, UI_ROUTES } from "@/src/constants/routes";
 import type { BalanceSummary } from "@/src/features/overview/overview-service";
+import { getClosePeriodDates } from "@/src/features/reconciliations/close-period";
+import {
+  normalizeReconciliationList,
+  type ReconciliationRow,
+} from "@/src/features/reconciliations/reconciliation-types";
 import { useFetch } from "@/src/hooks/useFetch";
 import {
   getFollowUpMessage,
@@ -12,18 +20,67 @@ import {
 } from "@/src/utils/messages";
 import { CaretRightIcon } from "@phosphor-icons/react";
 import { useRouter } from "next/navigation";
-import { useEffect, useLayoutEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useState } from "react";
 
 function fmt(n: number): string {
   return `$${Math.abs(n).toLocaleString("en-AU", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
+function formatYmdAu(ymd: string): string {
+  const [y, m, d] = ymd.slice(0, 10).split("-").map(Number);
+  return new Date(y, m - 1, d).toLocaleDateString("en-AU", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
+}
+
+function periodVariance(r: ReconciliationRow): number {
+  return r.actualCash + r.actualCard - (r.expectedCash + r.expectedCard);
+}
+
+function varianceClass(v: number): string {
+  if (v >= 0) return "text-green-600";
+  if (Math.abs(v) < 10) return "text-yellow-600";
+  return "text-red-600";
+}
+
 export default function Home() {
   const router = useRouter();
+  const [closeDialogOpen, setCloseDialogOpen] = useState(false);
   const [greetingMessage, setGreetingMessage] = useState("");
   const [followUpMessage, setFollowUpMessage] = useState("");
+  const [submittingClose, setSubmittingClose] = useState(false);
   /** `undefined` = loading; `null` = failed; otherwise loaded user */
   const [user, setUser] = useState<User | null | undefined>(undefined);
+
+  const {
+    data: balanceSummary,
+    loading: balanceLoading,
+    refetch: refetchBalance,
+  } = useFetch<BalanceSummary>(API_ROUTES.BALANCE_SUMMARY);
+
+  const {
+    data: reconciliationsRaw,
+    loading: reconciliationsLoading,
+    refetch: refetchReconciliations,
+  } = useFetch<unknown>(API_ROUTES.RECONCILIATIONS);
+
+  const reconciliations = useMemo(
+    () => normalizeReconciliationList(reconciliationsRaw),
+    [reconciliationsRaw],
+  );
+
+  const closePeriod = useMemo(
+    () => getClosePeriodDates(reconciliations),
+    [reconciliations],
+  );
+
+  const canOfferClose =
+    Boolean(balanceSummary) &&
+    !balanceLoading &&
+    !reconciliationsLoading &&
+    closePeriod !== null;
 
   useEffect(() => {
     async function loadUser() {
@@ -38,7 +95,6 @@ export default function Home() {
   }, []);
 
   /* Random copy must not run during SSR (hydration mismatch). Only when user is loaded. */
-  /* eslint-disable react-hooks/set-state-in-effect -- intentional client-only greeting init */
   useLayoutEffect(() => {
     if (!user) return;
     const tod = getTimeOfDay();
@@ -46,11 +102,44 @@ export default function Home() {
     setGreetingMessage(getGreetingMessage(tod, name));
     setFollowUpMessage(getFollowUpMessage(tod));
   }, [user]);
-  /* eslint-enable react-hooks/set-state-in-effect */
 
-  const { data: balanceSummary, loading } = useFetch<BalanceSummary>(
-    API_ROUTES.BALANCE_SUMMARY,
-  );
+  const openCloseDialog = () => {
+    if (!canOfferClose) return;
+    setCloseDialogOpen(true);
+  };
+
+  const confirmCloseMonth = async () => {
+    if (!balanceSummary || !closePeriod) return;
+    setSubmittingClose(true);
+    try {
+      const res = await fetch(API_ROUTES.RECONCILIATIONS, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          startPeriod: closePeriod.startPeriod,
+          endPeriod: closePeriod.endPeriod,
+          expectedCash: balanceSummary.expectedCashBalance,
+          expectedCard: balanceSummary.expectedCardBalance,
+          actualCash: balanceSummary.actualCashBalance,
+          actualCard: balanceSummary.actualCardBalance,
+        }),
+      });
+      const body = (await res.json()) as { message?: string; error?: string };
+
+      if (!res.ok) {
+        showToast(body.error ?? "Failed to close month", "error");
+        return;
+      }
+
+      setCloseDialogOpen(false);
+      showToast(body.message ?? "Nice! You've closed your balance!");
+      await Promise.all([refetchBalance(), refetchReconciliations()]);
+    } catch {
+      showToast("Failed to close month", "error");
+    } finally {
+      setSubmittingClose(false);
+    }
+  };
 
   return (
     <div className="flex flex-col gap-5">
@@ -67,7 +156,36 @@ export default function Home() {
         </div>
       ) : null}
 
-      <FetchContent data={balanceSummary} loading={loading}>
+      <div className="flex flex-col gap-2">
+        <Button
+          onClick={openCloseDialog}
+          disabled={!canOfferClose || submittingClose}
+          color="yellow"
+        >
+          End of month close
+        </Button>
+        <p className="text-sm text-gray-500 leading-snug">
+          Record a reconciliation through the end of this month using the
+          balances shown below (rolling since your last close).
+        </p>
+      </div>
+
+      <Dialog
+        open={closeDialogOpen}
+        onOpenChange={setCloseDialogOpen}
+        title={
+          closePeriod
+            ? `Close through ${formatYmdAu(closePeriod.endPeriod)}? This saves your current expected and actual card and cash totals for that period.`
+            : "You can’t close this period right now."
+        }
+        confirmLabel="Close month"
+        pendingConfirmLabel="Closing…"
+        onConfirm={() => void confirmCloseMonth()}
+        confirmDisabled={!closePeriod}
+        isPending={submittingClose}
+      />
+
+      <FetchContent data={balanceSummary} loading={balanceLoading}>
         {(data) => {
           const expectedTotalBalance =
             data.expectedCardBalance + data.expectedCashBalance;
@@ -149,6 +267,55 @@ export default function Home() {
             </section>
           );
         }}
+      </FetchContent>
+
+      <FetchContent
+        data={reconciliationsRaw === null ? null : reconciliations}
+        loading={reconciliationsLoading}
+        hasData={(list) => list.length > 0}
+        emptyMessage="No month closes recorded yet."
+      >
+        {(list) => (
+          <section>
+            <p className="text-sm font-bold italic text-gray-600 mb-2">
+              Recent closes
+            </p>
+            <div className="border-2 border-black bg-white shadow-[4px_4px_0px_rgba(0,0,0,1)]">
+              <div className="grid grid-cols-[1fr_auto] gap-x-3 gap-y-1 px-4 py-2.5 border-b-2 border-black bg-gray-50 text-xs font-bold uppercase tracking-wide">
+                <span>Period</span>
+                <span className="text-right">Variance</span>
+              </div>
+              {list.map((r) => {
+                const v = periodVariance(r);
+                return (
+                  <div
+                    key={r.id}
+                    className="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-2 px-4 py-3 border-b-2 border-black last:border-b-0"
+                  >
+                    <div className="text-sm">
+                      <p className="font-semibold">
+                        {formatYmdAu(r.startPeriod)} –{" "}
+                        {formatYmdAu(r.endPeriod)}
+                      </p>
+                      <p className="text-xs text-gray-600 mt-1 font-medium">
+                        Card {fmt(r.expectedCard)} | {fmt(r.actualCard)}
+                      </p>
+                      <p className="text-xs text-gray-600 mt-1 font-medium">
+                        Cash {fmt(r.expectedCash)} | {fmt(r.actualCash)}
+                      </p>
+                    </div>
+                    <span
+                      className={`text-sm font-bold sm:text-right self-center ${varianceClass(v)}`}
+                    >
+                      {v >= 0 ? "+" : "-"}
+                      {fmt(v)}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </section>
+        )}
       </FetchContent>
     </div>
   );
