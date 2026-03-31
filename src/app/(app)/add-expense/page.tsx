@@ -18,7 +18,7 @@ const EXPENSE_TYPE_OPTIONS = Object.values(ExpenseType);
 
 export default function AddExpensePage() {
   const router = useRouter();
-  const [expenseType, setExpenseType] = useState<string>(ExpenseType.Personal);
+  const [expenseType, setExpenseType] = useState<string>(ExpenseType.Business);
   const [cardAmount, setCardAmount] = useState("");
   const [cashAmount, setCashAmount] = useState("");
   const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
