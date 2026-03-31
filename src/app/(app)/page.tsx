@@ -170,9 +170,15 @@ export default function Home() {
         open={closeDialogOpen}
         onOpenChange={setCloseDialogOpen}
         title={
-          closePeriod
-            ? `Close through ${formatYmdAu(closePeriod.endPeriod)}?`
-            : "You can’t close this period right now."
+          closePeriod ? (
+            <p>
+              Close {formatYmdAu(closePeriod.startPeriod)} to
+              <br />
+              {formatYmdAu(closePeriod.endPeriod)}?
+            </p>
+          ) : (
+            "You can’t close this period right now."
+          )
         }
         confirmLabel="Close month"
         pendingConfirmLabel="Closing…"

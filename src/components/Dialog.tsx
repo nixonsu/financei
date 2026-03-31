@@ -3,6 +3,8 @@
 import classNames from "classnames";
 import { useLayoutEffect, useRef, type ReactNode } from "react";
 
+import Button from "@/src/components/Button";
+
 export type DialogProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -59,31 +61,31 @@ export default function Dialog({
         if (e.target === e.currentTarget) dismiss();
       }}
     >
-      <div className="w-96 max-w-[calc(100vw-2rem)] px-8 py-4 bg-white border-4 border-black shadow-[8px_8px_0px_rgba(0,0,0,1)] grid place-content-center">
-        <div>
-          <h2 className="text-2xl mb-4 font-bold leading-snug">{title}</h2>
-          <div className="flex flex-wrap gap-2 justify-center sm:justify-start">
+      <div className="mx-4 w-full max-w-lg border-4 border-black bg-white px-8 py-8 shadow-[8px_8px_0px_rgba(0,0,0,1)]">
+        <div className="flex flex-col items-stretch gap-8">
+          <h2 className="w-full min-w-0 text-left text-2xl font-bold leading-snug text-pretty">
+            {title}
+          </h2>
+          <div className="flex flex-wrap items-center justify-start gap-3">
             <button
               type="button"
-              className="text-base cursor-pointer hover:underline disabled:opacity-60 disabled:cursor-not-allowed"
+              className={classNames(
+                "h-12 cursor-pointer border-2 border-black bg-white px-5 text-base font-bold",
+                "hover:bg-gray-100 hover:shadow-[2px_2px_0px_rgba(0,0,0,1)] active:bg-gray-200",
+                "disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:bg-white disabled:hover:shadow-none",
+              )}
               onClick={dismiss}
               disabled={isPending}
             >
               {cancelLabel}
             </button>
-            <button
-              type="button"
-              disabled={confirmDisabled || isPending}
-              className={classNames(
-                "h-12 border-2 px-4 rounded-full cursor-pointer disabled:cursor-not-allowed disabled:hover:shadow-none",
-                confirmDisabled || isPending
-                  ? "border-disabled bg-disabled text-disabled-fg"
-                  : "border-black bg-cyan-200 hover:bg-cyan-300 hover:shadow-[2px_2px_0px_rgba(0,0,0,1)] active:bg-cyan-400",
-              )}
+            <Button
               onClick={onConfirm}
+              disabled={confirmDisabled || isPending}
+              color="cyan"
             >
               {isPending ? pendingConfirmLabel : confirmLabel}
-            </button>
+            </Button>
           </div>
         </div>
       </div>
