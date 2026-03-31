@@ -112,7 +112,7 @@ export default function ClientsPage() {
                       <span className="text-sm font-bold text-gray-500">
                         {letter}
                       </span>
-                      <hr className="border-gray-300" />
+                      <hr className="border-black opacity-10" />
                     </div>
                   )}
                   <div className="py-3">
