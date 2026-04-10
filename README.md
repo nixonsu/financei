@@ -1,4 +1,4 @@
-# Financé
+# Financee
 
 Bookkeeping app for the financially disorganised.
 
