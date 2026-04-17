@@ -5,12 +5,13 @@ import { API_ROUTES } from "@/src/constants/routes";
 import type { PeriodStatistics } from "@/src/features/overview/overview-service";
 import { useFetch } from "@/src/hooks/useFetch";
 import {
-  PERIODS,
-  type Period,
+  STATISTICS_PERIODS,
+  type StatisticsPeriod,
+  formatIsoRangeEnAu,
   getDefaultFinancialYear,
-  periodToDateRange,
+  statisticsPeriodToDateRange,
 } from "@/src/utils/period-filter";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
 function fmt(n: number): string {
   return `$${Math.abs(n).toLocaleString("en-AU", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -21,14 +22,27 @@ function fmtWhole(n: number): string {
 }
 
 export default function StatisticsPage() {
-  const [period, setPeriod] = useState<Period>("1m");
+  const [period, setPeriod] = useState<StatisticsPeriod>("thisMonth");
   const [customFrom, setCustomFrom] = useState(
     () => getDefaultFinancialYear().from,
   );
   const [customTo, setCustomTo] = useState(() => getDefaultFinancialYear().to);
 
+  const rangeLabel = useMemo(() => {
+    const { from, to } = statisticsPeriodToDateRange(
+      period,
+      customFrom,
+      customTo,
+    );
+    return formatIsoRangeEnAu(from, to);
+  }, [period, customFrom, customTo]);
+
   const statisticsUrl = () => {
-    const { from, to } = periodToDateRange(period, customFrom, customTo);
+    const { from, to } = statisticsPeriodToDateRange(
+      period,
+      customFrom,
+      customTo,
+    );
     return `${API_ROUTES.STATISTICS}?${new URLSearchParams({ from, to })}`;
   };
 
@@ -43,10 +57,11 @@ export default function StatisticsPage() {
         {(data) => (
           <div className="flex flex-col gap-5">
             <div className="grid grid-cols-5 border-2 border-black">
-              {PERIODS.map((p) => (
+              {STATISTICS_PERIODS.map((p) => (
                 <button
                   key={p.value}
                   type="button"
+                  title={p.title}
                   onClick={() => setPeriod(p.value)}
                   className={`cursor-pointer py-2.5 text-sm font-bold border-r-2 border-black last:border-r-0 transition-colors ${
                     period === p.value
@@ -58,6 +73,8 @@ export default function StatisticsPage() {
                 </button>
               ))}
             </div>
+
+            <p className="text-sm font-medium text-gray-600">{rangeLabel}</p>
 
             {period === "custom" && (
               <div className="flex gap-3">

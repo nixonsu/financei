@@ -8,7 +8,8 @@ import { showToast } from "@/src/components/Toast";
 import { API_ROUTES } from "@/src/constants/routes";
 import { useFetch } from "@/src/hooks/useFetch";
 import {
-  PERIODS,
+  TRANSACTIONS_PERIODS,
+  formatIsoRangeEnAu,
   type Period,
   getDefaultFinancialYear,
   periodToDateRange,
@@ -264,13 +265,22 @@ export default function TransactionsPage() {
     [filteredTransactions],
   );
 
+  const periodRange = useMemo(
+    () => periodToDateRange(period, customFrom, customTo),
+    [period, customFrom, customTo],
+  );
+  const periodRangeLabel = useMemo(
+    () => formatIsoRangeEnAu(periodRange.from, periodRange.to),
+    [periodRange.from, periodRange.to],
+  );
+
   return (
     <div className="flex flex-col gap-5">
       <h1 className="text-2xl font-bold">Transactions</h1>
 
       {/* Period selector */}
       <div className="grid grid-cols-5 border-2 border-black">
-        {PERIODS.map((p) => (
+        {TRANSACTIONS_PERIODS.map((p) => (
           <button
             key={p.value}
             type="button"
@@ -285,6 +295,8 @@ export default function TransactionsPage() {
           </button>
         ))}
       </div>
+
+      <p className="text-sm font-medium text-gray-600">{periodRangeLabel}</p>
 
       {period === "custom" && (
         <div className="flex gap-3">
