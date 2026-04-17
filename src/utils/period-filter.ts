@@ -1,14 +1,3 @@
-/** Preset range for list/overview filters; UI maps these to `from` / `to` ISO dates for APIs. */
-export type Period = "1m" | "3m" | "1y" | "all" | "custom";
-
-export const TRANSACTIONS_PERIODS: { value: Period; label: string }[] = [
-  { value: "1m", label: "1M" },
-  { value: "3m", label: "3M" },
-  { value: "1y", label: "1Y" },
-  { value: "all", label: "ALL" },
-  { value: "custom", label: "CST" },
-];
-
 export function toISODate(date: Date): string {
   return date.toISOString().slice(0, 10);
 }
@@ -30,37 +19,16 @@ export function formatIsoRangeEnAu(from: string, to: string): string {
   return `${a} – ${b}`;
 }
 
-/** Resolve preset or custom period to inclusive ISO date strings for API query params. */
-export function periodToDateRange(
-  period: Period,
-  customFrom: string,
-  customTo: string,
-): { from: string; to: string } {
-  if (period === "custom") return { from: customFrom, to: customTo };
-  const to = new Date();
-  const from = new Date(to);
-  if (period === "1m") {
-    from.setMonth(from.getMonth() - 1);
-  } else if (period === "3m") {
-    from.setMonth(from.getMonth() - 3);
-  } else if (period === "1y") {
-    from.setFullYear(from.getFullYear() - 1);
-  } else {
-    from.setFullYear(2000);
-  }
-  return { from: toISODate(from), to: toISODate(to) };
-}
-
-/** Statistics page presets (calendar-based, except custom = FY range from inputs). */
-export type StatisticsPeriod =
+/** Calendar-based preset keys for date filters; custom uses FY defaults from inputs. */
+export type Period =
   | "thisMonth"
   | "lastMonth"
   | "ytd"
   | "all"
   | "custom";
 
-export const STATISTICS_PERIODS: {
-  value: StatisticsPeriod;
+export const PERIODS: {
+  value: Period;
   label: string;
   title: string;
 }[] = [
@@ -71,8 +39,8 @@ export const STATISTICS_PERIODS: {
   { value: "custom", label: "CST", title: "Custom" },
 ];
 
-export function statisticsPeriodToDateRange(
-  period: StatisticsPeriod,
+export function periodToDateRange(
+  period: Period,
   customFrom: string,
   customTo: string,
 ): { from: string; to: string } {

@@ -5,11 +5,11 @@ import { API_ROUTES } from "@/src/constants/routes";
 import type { PeriodStatistics } from "@/src/features/overview/overview-service";
 import { useFetch } from "@/src/hooks/useFetch";
 import {
-  STATISTICS_PERIODS,
-  type StatisticsPeriod,
+  PERIODS,
   formatIsoRangeEnAu,
   getDefaultFinancialYear,
-  statisticsPeriodToDateRange,
+  periodToDateRange,
+  type Period,
 } from "@/src/utils/period-filter";
 import { useMemo, useState } from "react";
 
@@ -22,27 +22,19 @@ function fmtWhole(n: number): string {
 }
 
 export default function StatisticsPage() {
-  const [period, setPeriod] = useState<StatisticsPeriod>("thisMonth");
+  const [period, setPeriod] = useState<Period>("thisMonth");
   const [customFrom, setCustomFrom] = useState(
     () => getDefaultFinancialYear().from,
   );
   const [customTo, setCustomTo] = useState(() => getDefaultFinancialYear().to);
 
   const rangeLabel = useMemo(() => {
-    const { from, to } = statisticsPeriodToDateRange(
-      period,
-      customFrom,
-      customTo,
-    );
+    const { from, to } = periodToDateRange(period, customFrom, customTo);
     return formatIsoRangeEnAu(from, to);
   }, [period, customFrom, customTo]);
 
   const statisticsUrl = () => {
-    const { from, to } = statisticsPeriodToDateRange(
-      period,
-      customFrom,
-      customTo,
-    );
+    const { from, to } = periodToDateRange(period, customFrom, customTo);
     return `${API_ROUTES.STATISTICS}?${new URLSearchParams({ from, to })}`;
   };
 
@@ -57,7 +49,7 @@ export default function StatisticsPage() {
         {(data) => (
           <div className="flex flex-col gap-5">
             <div className="grid grid-cols-5 border-2 border-black">
-              {STATISTICS_PERIODS.map((p) => (
+              {PERIODS.map((p) => (
                 <button
                   key={p.value}
                   type="button"

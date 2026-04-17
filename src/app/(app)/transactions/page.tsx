@@ -8,7 +8,7 @@ import { showToast } from "@/src/components/Toast";
 import { API_ROUTES } from "@/src/constants/routes";
 import { useFetch } from "@/src/hooks/useFetch";
 import {
-  TRANSACTIONS_PERIODS,
+  PERIODS,
   formatIsoRangeEnAu,
   getDefaultFinancialYear,
   periodToDateRange,
@@ -153,7 +153,7 @@ function groupByDate(
 }
 
 export default function TransactionsPage() {
-  const [period, setPeriod] = useState<Period>("1m");
+  const [period, setPeriod] = useState<Period>("thisMonth");
   const [customFrom, setCustomFrom] = useState(getDefaultFinancialYear().from);
   const [customTo, setCustomTo] = useState(getDefaultFinancialYear().to);
   const [typeFilter, setTypeFilter] = useState<TransactionType | "ALL">("ALL");
@@ -280,10 +280,11 @@ export default function TransactionsPage() {
 
       {/* Period selector */}
       <div className="grid grid-cols-5 border-2 border-black">
-        {TRANSACTIONS_PERIODS.map((p) => (
+        {PERIODS.map((p) => (
           <button
             key={p.value}
             type="button"
+            title={p.title}
             onClick={() => setPeriod(p.value)}
             className={`cursor-pointer py-2.5 text-sm font-bold border-r-2 border-black last:border-r-0 transition-colors ${
               period === p.value
