@@ -24,7 +24,7 @@ import {
   UserIcon,
   XIcon,
 } from "@phosphor-icons/react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
 type TransactionType = "INCOME" | "EXPENSE";
 type TransactionCategory =
@@ -105,6 +105,33 @@ function formatDateHeading(iso: string): string {
 
 function totalAmount(tx: TransactionDTO): number {
   return parseFloat(tx.cardAmount) + parseFloat(tx.cashAmount);
+}
+
+function filterTransactions(
+  txs: TransactionDTO[],
+  typeFilter: TransactionType | "ALL",
+  categoryFilter: TransactionCategory | "ALL",
+): TransactionDTO[] {
+  return txs.filter((tx) => {
+    if (typeFilter !== "ALL" && tx.type !== typeFilter) return false;
+    if (categoryFilter !== "ALL" && tx.category !== categoryFilter)
+      return false;
+    return true;
+  });
+}
+
+function sumIncomeAndExpense(txs: TransactionDTO[]): {
+  income: number;
+  expense: number;
+} {
+  let income = 0;
+  let expense = 0;
+  for (const tx of txs) {
+    const t = totalAmount(tx);
+    if (tx.type === "INCOME") income += t;
+    else expense += t;
+  }
+  return { income, expense };
 }
 
 function formatCurrency(n: number): string {
@@ -224,6 +251,19 @@ export default function TransactionsPage() {
     refetch,
   } = useFetch<TransactionDTO[]>(txUrl);
 
+  const filteredTransactions = useMemo(
+    () =>
+      transactions
+        ? filterTransactions(transactions, typeFilter, categoryFilter)
+        : [],
+    [transactions, typeFilter, categoryFilter],
+  );
+
+  const filterTotals = useMemo(
+    () => sumIncomeAndExpense(filteredTransactions),
+    [filteredTransactions],
+  );
+
   return (
     <div className="flex flex-col gap-5">
       <h1 className="text-2xl font-bold">Transactions</h1>
@@ -315,29 +355,45 @@ export default function TransactionsPage() {
         ))}
       </div>
 
+      {transactions && transactions.length > 0 && (
+        <div className="border-2 border-black bg-white px-4 py-3 shadow-[4px_4px_0px_rgba(0,0,0,1)] flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-sm font-bold text-gray-700 shrink-0">
+            {filteredTransactions.length === 1
+              ? `${filteredTransactions.length} transaction`
+              : `${filteredTransactions.length} transactions`}
+          </p>
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm font-bold sm:justify-end">
+            {typeFilter === "INCOME" && (
+              <span className="text-green-600 whitespace-nowrap">
+                Total: {formatCurrency(filterTotals.income)}
+              </span>
+            )}
+            {typeFilter === "EXPENSE" && (
+              <span className="text-red-600 whitespace-nowrap">
+                Total: -{formatCurrency(filterTotals.expense)}
+              </span>
+            )}
+          </div>
+        </div>
+      )}
+
       <FetchContent
         data={transactions}
         loading={loading}
         hasData={(txs) => txs.length > 0}
         emptyMessage="No transactions found for this period."
       >
-        {(txs) => {
-          const filtered = txs.filter((tx) => {
-            if (typeFilter !== "ALL" && tx.type !== typeFilter) return false;
-            if (categoryFilter !== "ALL" && tx.category !== categoryFilter)
-              return false;
-            return true;
-          });
-
-          if (filtered.length === 0) {
+        {() => {
+          if (filteredTransactions.length === 0) {
             return (
               <p className="text-center text-gray-500 py-8">
-                Nuffing here :o Were you expecting something? Maybe try a different period?
+                Nuffing here :o Were you expecting something? Maybe try a
+                different period?
               </p>
             );
           }
 
-          const grouped = groupByDate(filtered);
+          const grouped = groupByDate(filteredTransactions);
           return (
             <div className="flex flex-col gap-6">
               {grouped.map(([date, dateTxs]) => (
