@@ -9,12 +9,6 @@ export const TRANSACTIONS_PERIODS: { value: Period; label: string }[] = [
   { value: "custom", label: "CST" },
 ];
 
-const PERIOD_DAYS: Record<string, number> = {
-  "1m": 30,
-  "3m": 90,
-  "1y": 365,
-};
-
 export function toISODate(date: Date): string {
   return date.toISOString().slice(0, 10);
 }
@@ -44,10 +38,16 @@ export function periodToDateRange(
 ): { from: string; to: string } {
   if (period === "custom") return { from: customFrom, to: customTo };
   const to = new Date();
-  const from = new Date();
-  const days = PERIOD_DAYS[period];
-  if (days) from.setDate(from.getDate() - days);
-  else from.setFullYear(2000);
+  const from = new Date(to);
+  if (period === "1m") {
+    from.setMonth(from.getMonth() - 1);
+  } else if (period === "3m") {
+    from.setMonth(from.getMonth() - 3);
+  } else if (period === "1y") {
+    from.setFullYear(from.getFullYear() - 1);
+  } else {
+    from.setFullYear(2000);
+  }
   return { from: toISODate(from), to: toISODate(to) };
 }
 
