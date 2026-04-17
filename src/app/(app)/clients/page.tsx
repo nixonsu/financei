@@ -1,6 +1,7 @@
 "use client";
 
 import { Client } from "@/generated/prisma/client";
+import { ClientSyncTrigger } from "@/generated/prisma/browser";
 import FetchContent from "@/src/components/FetchContent";
 import IconButton from "@/src/components/IconButton";
 import Input from "@/src/components/Input";
@@ -8,7 +9,10 @@ import { showToast } from "@/src/components/Toast";
 import { API_ROUTES, UI_ROUTES } from "@/src/constants/routes";
 import { SyncResult } from "@/src/features/clients/client-service";
 import { useFetch } from "@/src/hooks/useFetch";
-import { ArrowsClockwiseIcon, ArrowsCounterClockwiseIcon } from "@phosphor-icons/react";
+import {
+  ArrowsCounterClockwiseIcon,
+  ClockCounterClockwiseIcon,
+} from "@phosphor-icons/react";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 
@@ -26,7 +30,11 @@ export default function ClientsPage() {
 
   const handleSync = async () => {
     setSyncing(true);
-    const res = await fetch(API_ROUTES.CLIENTS_SYNC, { method: "POST" });
+    const res = await fetch(API_ROUTES.CLIENTS_SYNC, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ trigger: ClientSyncTrigger.MANUAL }),
+    });
     const data = await res.json();
 
     if (!res.ok) {
@@ -70,6 +78,12 @@ export default function ClientsPage() {
           placeholder="Looking for someone?"
           className="w-full!"
         />
+        <IconButton
+          onClick={() => router.push(UI_ROUTES.CLIENTS_SYNC_HISTORY)}
+          className="h-auto! w-auto! px-3"
+        >
+          <ClockCounterClockwiseIcon size={24} weight="bold" />
+        </IconButton>
         <IconButton
           onClick={handleSync}
           disabled={syncing}

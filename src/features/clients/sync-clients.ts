@@ -1,4 +1,9 @@
-import { PrismaClient } from "@/generated/prisma/client";
+import {
+  ClientSyncOutcome,
+  ClientSyncTrigger,
+  Prisma,
+  PrismaClient,
+} from "@/generated/prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 import fs from "fs";
 import Papa from "papaparse";
@@ -22,7 +27,22 @@ export interface SyncResult {
   total: number;
 }
 
-export async function syncClients(businessId: number): Promise<SyncResult> {
+export interface SyncClientsOptions {
+  trigger?: ClientSyncTrigger;
+}
+
+function caughtErrorToJson(caught: unknown): Prisma.InputJsonValue {
+  if (caught instanceof Error) {
+    return {
+      name: caught.name,
+      message: caught.message,
+      stack: caught.stack ?? null,
+    };
+  }
+  return { message: String(caught) };
+}
+
+async function runClientSync(businessId: number): Promise<SyncResult> {
   console.log("Downloading client list from Acuity...");
   const csvPath = await downloadClientList();
   const file = fs.readFileSync(csvPath, "utf-8");
@@ -126,4 +146,33 @@ export async function syncClients(businessId: number): Promise<SyncResult> {
   console.log("Cleaned up downloaded CSV");
 
   return { created, updated, total: result.data.length };
+}
+
+export async function syncClients(
+  businessId: number,
+  options?: SyncClientsOptions,
+): Promise<SyncResult> {
+  const trigger = options?.trigger ?? ClientSyncTrigger.MANUAL;
+
+  try {
+    const result = await runClientSync(businessId);
+    await prisma.clientSyncAttempt.create({
+      data: {
+        businessId,
+        trigger,
+        outcome: ClientSyncOutcome.SUCCEEDED,
+      },
+    });
+    return result;
+  } catch (caught) {
+    await prisma.clientSyncAttempt.create({
+      data: {
+        businessId,
+        trigger,
+        outcome: ClientSyncOutcome.FAILED,
+        errors: caughtErrorToJson(caught),
+      },
+    });
+    throw caught;
+  }
 }

@@ -5,6 +5,7 @@ export const API_ROUTES = {
   BALANCES_CASH: "/api/balances/cash",
   CLIENTS: "/api/clients",
   CLIENTS_SYNC: "/api/clients/sync",
+  CLIENTS_SYNC_HISTORY: "/api/clients/sync/history",
   INCOME_SALE: "/api/income/sale",
   INCOME_INTEREST: "/api/income/interest",
   EXPENSE_PERSONAL: "/api/expense/personal",
@@ -26,6 +27,7 @@ export const UI_ROUTES = {
   ADD_CONVERT: "/add-convert",
   TRANSACTIONS: "/transactions",
   CLIENTS: "/clients",
+  CLIENTS_SYNC_HISTORY: "/clients/sync-history",
   SETTINGS: "/settings",
   STATISTICS: "/statistics",
 } as const;

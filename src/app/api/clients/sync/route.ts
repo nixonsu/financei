@@ -1,8 +1,13 @@
+import { syncBodySchema } from "@/src/features/clients/client-sync-schema";
 import { syncClients } from "@/src/features/clients/client-service";
+import { parseRequestBody } from "@/src/utils/validation";
 
-export async function POST(): Promise<Response> {
+export async function POST(request: Request): Promise<Response> {
   try {
-    const result = await syncClients(1);
+    const parsed = await parseRequestBody(request, syncBodySchema);
+    if (!parsed.success) return parsed.response;
+    const { trigger } = parsed.data;
+    const result = await syncClients(1, { trigger });
 
     return new Response(JSON.stringify(result), {
       headers: { "Content-Type": "application/json" },
