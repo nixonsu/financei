@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "populate": "tsx src/scripts/populate-transactions.ts"
+    "populate": "tsx src/scripts/populate-transactions.ts",
+    "sync:clients": "tsx src/scripts/sync-clients.ts"
   },
   "dependencies": {
     "@phosphor-icons/react": "^2.1.10",

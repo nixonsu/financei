@@ -13,6 +13,7 @@ A small, mobile-first web app for tracking money across **card** and **cash**, c
 - [Getting started](#getting-started)
 - [Environment variables](#environment-variables)
 - [Optional Acuity client sync and Playwright](#optional-acuity-client-sync-and-playwright)
+- [Scheduled client sync (crontab)](#scheduled-client-sync-crontab)
 - [Database commands](#database-commands)
 - [Scripts](#scripts)
 - [Project structure](#project-structure)
@@ -120,6 +121,49 @@ npx playwright install --with-deps chromium
 
 Ensure `ACUITY_EMAIL`, `ACUITY_PASSWORD`, and `ACUITY_BACKUP_CODE` are set when running sync-related flows. Playwright may persist auth state under `.acuity-auth-state.json` and downloads under `data/` as implemented in the sync code.
 
+## Scheduled client sync (crontab)
+
+Use this when you want **Acuity client sync** to run automatically (for example every day at **9:00**) on the **same machine** where you already keep a working `.env`, `.acuity-auth-state.json`, and the repo’s `data/` directory—typically the host that runs `yarn start` in production or a dedicated job runner with the same checkout.
+
+**Why `cd` to the repo root:** the sync script resolves paths relative to the current working directory. Starting the job from the project root ensures environment files and Playwright paths match a manual sync.
+
+**Prerequisites**
+
+- Dependencies installed (`yarn`)
+- Chromium for Playwright (`npx playwright install --with-deps chromium`) if not already installed
+- Valid `.env` with `DATABASE_URL` and Acuity variables (see [Environment variables](#environment-variables))
+
+**Install the cron entry**
+
+1. On that machine, resolve absolute paths you will use in cron (cron’s `PATH` is minimal):
+
+   ```zsh
+   which yarn
+   pwd
+   ```
+
+2. Edit your user crontab:
+
+   ```zsh
+   crontab -e
+   ```
+
+3. Add a line. This example runs **`yarn sync:clients`** at **09:00** every day in the **system default timezone** (replace paths and log file):
+
+   ```cron
+   0 9 * * * cd /absolute/path/to/financee && /absolute/path/to/yarn sync:clients >> /absolute/path/to/financee-sync.log 2>&1
+   ```
+
+   To force a specific timezone for that job (example: US Pacific), prefix the command:
+
+   ```cron
+   0 9 * * * TZ=America/Los_Angeles cd /absolute/path/to/financee && /absolute/path/to/yarn sync:clients >> /absolute/path/to/financee-sync.log 2>&1
+   ```
+
+**Verify**
+
+- Inspect the log file after the scheduled time, or open **Clients → sync history** in the app: automatic runs are stored as **Automatic** with **Succeeded** or **Failed** (including JSON error details when a run fails).
+
 ## Database commands
 
 Always run these from the **repository root** (same level as `prisma.config.ts`).
@@ -157,6 +201,7 @@ Migrations live under [`prisma/migrations`](prisma/migrations).
 - **`yarn start`** — Run the production server (after `build`)
 - **`yarn lint`** — ESLint
 - **`yarn populate`** — Import transactions from CSV via [`src/scripts/populate-transactions.ts`](src/scripts/populate-transactions.ts); expects a configured database and uses **`BUSINESS_ID = 1`** in the script—adjust or seed data accordingly before relying on it
+- **`yarn sync:clients`** — Run Acuity client sync once from [`src/scripts/sync-clients.ts`](src/scripts/sync-clients.ts) as an **automatic** job (same logic as the API); use from [Scheduled client sync (crontab)](#scheduled-client-sync-crontab) or ad hoc from the repo root
 
 ## Project structure
 
