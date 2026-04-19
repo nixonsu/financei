@@ -1,10 +1,14 @@
-import { getUserById } from "@/src/features/users/user-service";
+import { errorResponse, requireSession } from "@/src/features/auth/session";
 
 export async function GET(): Promise<Response> {
-  const user = await getUserById(1);
-
-  return new Response(JSON.stringify(user), {
-    status: 200,
-    headers: { "Content-Type": "application/json" },
-  });
+  try {
+    const session = await requireSession();
+    const { id, firstName, lastName, email, image, businessId } = session.user;
+    return new Response(
+      JSON.stringify({ id, firstName, lastName, email, image, businessId }),
+      { status: 200, headers: { "Content-Type": "application/json" } },
+    );
+  } catch (error) {
+    return errorResponse(error);
+  }
 }

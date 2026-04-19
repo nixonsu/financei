@@ -21,7 +21,7 @@ import { createPortal } from "react-dom";
 const FANOUT_ANIM_MS = 220;
 const FAB_SIZE_PX = 56;
 const FAB_GAP_PX = 12;
-const FAB_POS_STORAGE_KEY = "financee.fab-position";
+const FAB_POS_STORAGE_KEY = "breadbook.fab-position";
 const FAB_DRAG_THRESHOLD_PX = 10;
 const FAB_MARGIN = 8;
 const FAB_TOP_MARGIN = 8;

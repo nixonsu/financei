@@ -1,6 +1,6 @@
-# Financee
+# Breadbook
 
-Bookkeeping app for the financially disorganised.
+Bookkeeping app for the financially half-baked.
 
 A small, mobile-first web app for tracking money across **card** and **cash**, closing periods against reconciliations, and keeping clients in sync when you use optional automation.
 
@@ -11,6 +11,7 @@ A small, mobile-first web app for tracking money across **card** and **cash**, c
 - [Tech stack](#tech-stack)
 - [Prerequisites](#prerequisites)
 - [Getting started](#getting-started)
+- [Authentication](#authentication)
 - [Environment variables](#environment-variables)
 - [Optional Acuity client sync and Playwright](#optional-acuity-client-sync-and-playwright)
 - [Scheduled client sync (crontab)](#scheduled-client-sync-crontab)
@@ -20,7 +21,7 @@ A small, mobile-first web app for tracking money across **card** and **cash**, c
 
 ## Overview
 
-Financé stores **transactions** with separate **card** and **cash** amounts, categories for income (sale, interest), expense (business, personal), and conversions, optional **client** links for sales, **balance snapshots** for card and cash, and **reconciliations** that capture expected vs actual totals over a period. The home dashboard surfaces balance summaries and supports **closing a period** so you can line your books up with reality.
+Breadbook stores **transactions** with separate **card** and **cash** amounts, categories for income (sale, interest), expense (business, personal), and conversions, optional **client** links for sales, **balance snapshots** for card and cash, and **reconciliations** that capture expected vs actual totals over a period. The home dashboard surfaces balance summaries and supports **closing a period** so you can line your books up with reality.
 
 ## Features
 
@@ -49,7 +50,7 @@ Financé stores **transactions** with separate **card** and **cash** amounts, ca
 - **Yarn**
 - **Docker** (recommended) or any PostgreSQL 16+ instance you can point `DATABASE_URL` at
 
-The repo includes [`docker-compose.yml`](docker-compose.yml) with PostgreSQL 16, database `financee-db`, user `postgres`, password `password`, exposed on port **5432**.
+The repo includes [`docker-compose.yml`](docker-compose.yml) with PostgreSQL 16, database `breadbook-db`, user `postgres`, password `password`, exposed on port **5432**.
 
 ## Getting started
 
@@ -74,7 +75,7 @@ The repo includes [`docker-compose.yml`](docker-compose.yml) with PostgreSQL 16,
 4. Create a `.env` file in the project root with a connection string that matches your database. For the bundled Compose service:
 
    ```env
-   DATABASE_URL="postgresql://postgres:password@localhost:5432/financee-db"
+   DATABASE_URL="postgresql://postgres:password@localhost:5432/breadbook-db"
    ```
 
 5. Apply migrations and generate the Prisma client (run from the **repository root**; [`prisma.config.ts`](prisma.config.ts) wires schema and datasource):
@@ -97,11 +98,53 @@ The repo includes [`docker-compose.yml`](docker-compose.yml) with PostgreSQL 16,
 
 For production databases, use `npx prisma migrate deploy` instead of `migrate dev`.
 
+## Authentication
+
+Breadbook uses **Auth.js v5** (`next-auth@beta`) for authentication. Sign-in is via Google or Microsoft (personal and work/school accounts). Any Google/Microsoft account can sign in; on first login a short onboarding flow collects a name and business name.
+
+### Required env vars
+
+```env
+AUTH_SECRET=<random 32-char string - generate with: openssl rand -base64 33 | tr -dc 'A-Za-z0-9' | head -c 32>
+AUTH_URL=http://localhost:3000   # production: your public URL
+
+# Google OAuth
+AUTH_GOOGLE_ID=...
+AUTH_GOOGLE_SECRET=...
+
+# Microsoft (personal + work/school accounts via common tenant)
+AUTH_MICROSOFT_ENTRA_ID_ID=...
+AUTH_MICROSOFT_ENTRA_ID_SECRET=...
+```
+
+### Setting up Google OAuth
+
+1. Go to [Google Cloud Console](https://console.cloud.google.com/) → APIs & Services → Credentials.
+2. Create an OAuth 2.0 Client ID (Web application).
+3. Add an Authorised redirect URI: `https://your-domain/api/auth/callback/google` (and `http://localhost:3000/api/auth/callback/google` for local dev).
+4. Copy the **Client ID** → `AUTH_GOOGLE_ID` and **Client secret** → `AUTH_GOOGLE_SECRET`.
+
+### Setting up Microsoft OAuth (personal + work accounts)
+
+1. Go to [Microsoft Entra admin center](https://entra.microsoft.com/) (or [Azure Portal](https://portal.azure.com/)) → App registrations → New registration.
+2. For **Supported account types**, choose **Accounts in any organizational directory (Any Microsoft Entra ID tenant - Multitenant) and personal Microsoft accounts (e.g. Skype, Xbox)** — this allows outlook.com, hotmail.com, and live.com in addition to work/school accounts.
+3. Under Redirect URIs, add: `https://your-domain/api/auth/callback/microsoft-entra-id` (and `http://localhost:3000/api/auth/callback/microsoft-entra-id` for local dev).
+4. Generate a client secret under **Certificates & secrets**.
+5. Copy the **Application (client) ID** → `AUTH_MICROSOFT_ENTRA_ID_ID` and the secret value → `AUTH_MICROSOFT_ENTRA_ID_SECRET`.
+
+### Linking existing accounts
+
+If a `user` row already exists in the database with a matching email address, Auth.js will link the OAuth identity to that existing user (via `allowDangerousEmailAccountLinking: true`). This means existing users do not lose their data when signing in for the first time.
+
 ## Environment variables
 
 **Required**
 
 - **`DATABASE_URL`** — PostgreSQL connection string for Prisma.
+- **`AUTH_SECRET`** — Random secret used to sign JWT session tokens. Generate with `openssl rand -base64 33 | tr -dc 'A-Za-z0-9' | head -c 32`.
+- **`AUTH_URL`** — Public base URL of the app (e.g. `http://localhost:3000`).
+- **`AUTH_GOOGLE_ID`** / **`AUTH_GOOGLE_SECRET`** — Google OAuth credentials (see [Authentication](#authentication)).
+- **`AUTH_MICROSOFT_ENTRA_ID_ID`** / **`AUTH_MICROSOFT_ENTRA_ID_SECRET`** — Microsoft Entra app credentials (see [Authentication](#authentication)).
 
 **Optional** (only if you use **Acuity Scheduling** client export/sync; see [`src/features/clients/download-clients.ts`](src/features/clients/download-clients.ts))
 
@@ -151,13 +194,13 @@ Use this when you want **Acuity client sync** to run automatically (for example 
 3. Add a line. This example runs **`yarn sync:clients`** at **09:00** every day in the **system default timezone** (replace paths and log file):
 
    ```cron
-   0 9 * * * cd /absolute/path/to/financee && /absolute/path/to/yarn sync:clients >> /absolute/path/to/financee-sync.log 2>&1
+   0 9 * * * cd /absolute/path/to/breadbook && /absolute/path/to/yarn sync:clients >> /absolute/path/to/breadbook-sync.log 2>&1
    ```
 
    To force a specific timezone for that job (example: US Pacific), prefix the command:
 
    ```cron
-   0 9 * * * TZ=America/Los_Angeles cd /absolute/path/to/financee && /absolute/path/to/yarn sync:clients >> /absolute/path/to/financee-sync.log 2>&1
+   0 9 * * * TZ=America/Los_Angeles cd /absolute/path/to/breadbook && /absolute/path/to/yarn sync:clients >> /absolute/path/to/breadbook-sync.log 2>&1
    ```
 
 **Verify**

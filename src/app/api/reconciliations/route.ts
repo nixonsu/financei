@@ -3,27 +3,25 @@ import {
   createReconciliation,
   getReconciliations,
 } from "@/src/features/reconciliations/reconciliation-service";
+import { errorResponse, requireBusinessId } from "@/src/features/auth/session";
 import { parseRequestBody } from "@/src/utils/validation";
 
-export async function GET(request: Request): Promise<Response> {
+export async function GET(): Promise<Response> {
   try {
-    const reconciliations = await getReconciliations(1);
+    const businessId = await requireBusinessId();
+    const reconciliations = await getReconciliations(businessId);
     return new Response(JSON.stringify(reconciliations), {
       headers: { "Content-Type": "application/json" },
     });
   } catch (error) {
-    const message =
-      error instanceof Error ? error.message : "Failed to get reconciliations";
     console.error("Failed to get reconciliations:", error);
-    return new Response(JSON.stringify({ error: message }), {
-      status: 500,
-      headers: { "Content-Type": "application/json" },
-    });
+    return errorResponse(error);
   }
 }
 
 export async function POST(request: Request): Promise<Response> {
   try {
+    const businessId = await requireBusinessId();
     const parsed = await parseRequestBody(request, reconciliationSchema);
     if (!parsed.success) return parsed.response;
     const {
@@ -36,7 +34,7 @@ export async function POST(request: Request): Promise<Response> {
     } = parsed.data;
 
     await createReconciliation(
-      1,
+      businessId,
       new Date(startPeriod),
       new Date(endPeriod),
       expectedCash,
@@ -52,14 +50,7 @@ export async function POST(request: Request): Promise<Response> {
       },
     );
   } catch (error) {
-    const message =
-      error instanceof Error
-        ? error.message
-        : "Failed to create reconciliation";
     console.error("Failed to create reconciliation:", error);
-    return new Response(JSON.stringify({ error: message }), {
-      status: 500,
-      headers: { "Content-Type": "application/json" },
-    });
+    return errorResponse(error);
   }
 }
