@@ -3,9 +3,27 @@ import { PrismaAdapter } from "@auth/prisma-adapter";
 import NextAuth from "next-auth";
 import { prisma } from "@/src/lib/prisma";
 
+function splitName(name?: string | null): { firstName: string; lastName: string } {
+  const parts = (name ?? "").trim().split(/\s+/);
+  const firstName = parts[0] ?? "";
+  const lastName = parts.slice(1).join(" ");
+  return { firstName, lastName };
+}
+
+function makePrismaAdapter() {
+  const base = PrismaAdapter(prisma);
+  return {
+    ...base,
+    createUser: ({ name, ...data }: Parameters<NonNullable<typeof base.createUser>>[0]) =>
+      base.createUser!({ ...data, ...splitName(name) }),
+    updateUser: ({ name, ...data }: Parameters<NonNullable<typeof base.updateUser>>[0]) =>
+      base.updateUser!({ ...data, ...(name !== undefined ? splitName(name) : {}) } as never),
+  };
+}
+
 export const { handlers, auth, signIn, signOut } = NextAuth({
   ...authConfig,
-  adapter: PrismaAdapter(prisma),
+  adapter: makePrismaAdapter(),
   callbacks: {
     ...authConfig.callbacks,
     async jwt({ token, user, trigger }) {
