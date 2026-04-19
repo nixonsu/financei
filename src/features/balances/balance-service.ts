@@ -8,18 +8,21 @@ import {
   CurrentBalanceSummary,
 } from "@/src/features/balances/balances";
 import { prisma } from "@/src/lib/prisma";
+import { Decimal } from "@prisma/client/runtime/client";
 
 export async function getCurrentBalances(
   businessId: number,
 ): Promise<CurrentBalanceSummary> {
-  const lastClose = await prisma.reconciliation.findFirstOrThrow({
-    where: {
-      businessId: businessId,
-    },
-    orderBy: {
-      endPeriod: "desc",
-    },
-  });
+  const epoch = new Date(0);
+  const lastClose = (await prisma.reconciliation.findFirst({
+    where: { businessId },
+    orderBy: { endPeriod: "desc" },
+  })) ?? {
+    startPeriod: epoch,
+    endPeriod: epoch,
+    actualCash: { toNumber: () => 0 },
+    actualCard: { toNumber: () => 0 },
+  };
 
   const transactions = await prisma.transaction.findMany({
     where: {
@@ -121,25 +124,20 @@ export async function updateCashBalance(
 }
 
 export async function getBalances(businessId: number): Promise<Balances> {
-  const cardSnapshot: CardBalanceSnapshot =
-    await prisma.cardBalanceSnapshot.findFirstOrThrow({
-      where: {
-        businessId: businessId,
-      },
-      orderBy: {
-        recordedAt: "desc",
-      },
-    });
+  const cardSnapshot: Pick<CardBalanceSnapshot, "total"> =
+    (await prisma.cardBalanceSnapshot.findFirst({
+      where: { businessId },
+      orderBy: { recordedAt: "desc" },
+    })) ?? { total: new Decimal(0) };
 
-  const cashSnapshot: CashBalanceSnapshot =
-    await prisma.cashBalanceSnapshot.findFirstOrThrow({
-      where: {
-        businessId: businessId,
-      },
-      orderBy: {
-        recordedAt: "desc",
-      },
-    });
+  const cashSnapshot: Pick<
+    CashBalanceSnapshot,
+    "fives" | "tens" | "twenties" | "fifties" | "hundreds"
+  > =
+    (await prisma.cashBalanceSnapshot.findFirst({
+      where: { businessId },
+      orderBy: { recordedAt: "desc" },
+    })) ?? { fives: 0, tens: 0, twenties: 0, fifties: 0, hundreds: 0 };
 
   const response: Balances = {
     cardBalance: {
@@ -158,7 +156,9 @@ export async function getBalances(businessId: number): Promise<Balances> {
   return response;
 }
 
-function calculateTotalCashBalance(cash: CashBalanceSnapshot): number {
+function calculateTotalCashBalance(
+  cash: Pick<CashBalanceSnapshot, "fives" | "tens" | "twenties" | "fifties" | "hundreds">,
+): number {
   return (
     cash.fives * 5 +
     cash.tens * 10 +
