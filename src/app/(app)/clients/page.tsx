@@ -13,14 +13,19 @@ import {
   ArrowsCounterClockwiseIcon,
   ClockCounterClockwiseIcon,
 } from "@phosphor-icons/react";
+import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
+
+const ACUITY_SYNC_BUSINESS_ID = 1;
 
 export default function ClientsPage() {
   const [search, setSearch] = useState("");
   const [syncing, setSyncing] = useState(false);
 
   const router = useRouter();
+  const { data: session } = useSession();
+  const canSync = session?.user?.businessId === ACUITY_SYNC_BUSINESS_ID;
 
   const {
     data: clients,
@@ -78,23 +83,27 @@ export default function ClientsPage() {
           placeholder="Looking for someone?"
           className="w-full!"
         />
-        <IconButton
-          onClick={() => router.push(UI_ROUTES.CLIENTS_SYNC_HISTORY)}
-          className="h-auto! w-auto! px-3"
-        >
-          <ClockCounterClockwiseIcon size={24} weight="bold" />
-        </IconButton>
-        <IconButton
-          onClick={handleSync}
-          disabled={syncing}
-          className="h-auto! w-auto! px-3"
-        >
-          <ArrowsCounterClockwiseIcon
-            size={24}
-            weight="bold"
-            className={syncing ? "animate-spin" : ""}
-          />
-        </IconButton>
+        {canSync && (
+          <IconButton
+            onClick={() => router.push(UI_ROUTES.CLIENTS_SYNC_HISTORY)}
+            className="h-auto! w-auto! px-3"
+          >
+            <ClockCounterClockwiseIcon size={24} weight="bold" />
+          </IconButton>
+        )}
+        {canSync && (
+          <IconButton
+            onClick={handleSync}
+            disabled={syncing}
+            className="h-auto! w-auto! px-3"
+          >
+            <ArrowsCounterClockwiseIcon
+              size={24}
+              weight="bold"
+              className={syncing ? "animate-spin" : ""}
+            />
+          </IconButton>
+        )}
       </div>
 
       <div className="flex flex-col">

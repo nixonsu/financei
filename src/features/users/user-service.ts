@@ -1,8 +1,5 @@
-import { PrismaClient, User } from "@/generated/prisma/client";
-import { PrismaPg } from "@prisma/adapter-pg";
-
-const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
-const prisma = new PrismaClient({ adapter });
+import { User } from "@/generated/prisma/client";
+import { prisma } from "@/src/lib/prisma";
 
 export async function getUserByEmail(email: string): Promise<User> {
   const user: User = await prisma.user.findUniqueOrThrow({

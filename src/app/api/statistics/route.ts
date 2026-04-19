@@ -1,4 +1,5 @@
 import { getPeriodStatistics } from "@/src/features/overview/overview-service";
+import { errorResponse, requireBusinessId } from "@/src/features/auth/session";
 import { endOfUtcDay, startOfUtcDay } from "@/src/utils/query-date-range";
 
 export async function GET(request: Request): Promise<Response> {
@@ -26,17 +27,13 @@ export async function GET(request: Request): Promise<Response> {
   }
 
   try {
-    const statistics = await getPeriodStatistics(1, fromDate, toDate);
+    const businessId = await requireBusinessId();
+    const statistics = await getPeriodStatistics(businessId, fromDate, toDate);
     return new Response(JSON.stringify(statistics), {
       headers: { "Content-Type": "application/json" },
     });
   } catch (error) {
-    const message =
-      error instanceof Error ? error.message : "Failed to fetch statistics";
     console.error("Failed to fetch statistics:", error);
-    return new Response(JSON.stringify({ error: message }), {
-      status: 500,
-      headers: { "Content-Type": "application/json" },
-    });
+    return errorResponse(error);
   }
 }

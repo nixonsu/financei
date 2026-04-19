@@ -1,5 +1,7 @@
 import { deleteTransactionSchema, updateTransactionSchema } from "@/src/features/transactions/transaction-schemas";
 import { deleteTransaction, getTransactions, updateTransaction } from "@/src/features/transactions/transaction-service";
+import { errorResponse, requireBusinessId } from "@/src/features/auth/session";
+import { prisma } from "@/src/lib/prisma";
 import { endOfUtcDay, startOfUtcDay } from "@/src/utils/query-date-range";
 import { parseRequestBody } from "@/src/utils/validation";
 
@@ -26,27 +28,32 @@ export async function GET(request: Request): Promise<Response> {
   }
 
   try {
-    const transactions = await getTransactions(1, fromDate, toDate);
-
+    const businessId = await requireBusinessId();
+    const transactions = await getTransactions(businessId, fromDate, toDate);
     return new Response(JSON.stringify(transactions), {
       headers: { "Content-Type": "application/json" },
     });
   } catch (error) {
-    const message =
-      error instanceof Error ? error.message : "Failed to fetch transactions";
     console.error("Failed to fetch transactions:", error);
-    return new Response(JSON.stringify({ error: message }), {
-      status: 500,
-      headers: { "Content-Type": "application/json" },
-    });
+    return errorResponse(error);
   }
 }
 
 export async function PATCH(request: Request): Promise<Response> {
   try {
+    const businessId = await requireBusinessId();
     const parsed = await parseRequestBody(request, updateTransactionSchema);
     if (!parsed.success) return parsed.response;
     const { id, cardAmount, cashAmount, date, notes } = parsed.data;
+
+    // Ownership check
+    const tx = await prisma.transaction.findUnique({ where: { id }, select: { businessId: true } });
+    if (!tx || tx.businessId !== businessId) {
+      return new Response(JSON.stringify({ error: "Not found" }), {
+        status: 404,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
 
     const updated = await updateTransaction(id, { date, notes, cardAmount, cashAmount });
 
@@ -55,20 +62,25 @@ export async function PATCH(request: Request): Promise<Response> {
       { status: 200, headers: { "Content-Type": "application/json" } },
     );
   } catch (error) {
-    const message =
-      error instanceof Error ? error.message : "Failed to update transaction";
     console.error("Failed to update transaction:", error);
-    return new Response(JSON.stringify({ error: message }), {
-      status: 500,
-      headers: { "Content-Type": "application/json" },
-    });
+    return errorResponse(error);
   }
 }
 
 export async function DELETE(request: Request): Promise<Response> {
   try {
+    const businessId = await requireBusinessId();
     const parsed = await parseRequestBody(request, deleteTransactionSchema);
     if (!parsed.success) return parsed.response;
+
+    // Ownership check
+    const tx = await prisma.transaction.findUnique({ where: { id: parsed.data.id }, select: { businessId: true } });
+    if (!tx || tx.businessId !== businessId) {
+      return new Response(JSON.stringify({ error: "Not found" }), {
+        status: 404,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
 
     await deleteTransaction(parsed.data.id);
 
@@ -77,12 +89,7 @@ export async function DELETE(request: Request): Promise<Response> {
       { status: 200, headers: { "Content-Type": "application/json" } },
     );
   } catch (error) {
-    const message =
-      error instanceof Error ? error.message : "Failed to delete transaction";
     console.error("Failed to delete transaction:", error);
-    return new Response(JSON.stringify({ error: message }), {
-      status: 500,
-      headers: { "Content-Type": "application/json" },
-    });
+    return errorResponse(error);
   }
 }
