@@ -12,7 +12,8 @@ const PUBLIC_PATHS = [
   /^\/favicon\.ico$/,
   /^\/icon\.png$/,
   /^\/apple-icon\.png$/,
-  /^\/manifest\.json$/,
+  /^\/manifest\.(json|webmanifest)$/,
+  /^\/icon-\d+\.png$/,
   /^\/sw\.js$/,
   /^\/workbox-(.*)\.(js|js\.map)$/,
 ];
